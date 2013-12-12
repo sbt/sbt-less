@@ -1,0 +1,2 @@
+# Lint a valid js file and see that it translates to the target folder
+> jslint
