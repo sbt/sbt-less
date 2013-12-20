@@ -50,7 +50,9 @@
 
     var doJob = function(options) {
         var input = options.input;
-        console.log("Compiling " + input);
+        if (options.verbose) {
+            console.log("Compiling " + input);
+        }
 
         var output = options.output;
 

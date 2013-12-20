@@ -3,7 +3,6 @@ package com.typesafe.less
 import akka.actor.ActorRef
 import akka.pattern.ask
 import java.io.File
-import scala.collection.immutable
 import spray.json._
 import akka.util.Timeout
 import scala.concurrent.{ExecutionContext, Future}
@@ -11,6 +10,7 @@ import com.typesafe.jse.Engine
 import com.typesafe.jse.Engine.JsExecutionResult
 import org.webjars.WebJarExtractor
 import scala.util.control.NonFatal
+import scala.collection.immutable
 
 case class LessOptions(
   silent: Boolean = false,
@@ -22,8 +22,8 @@ case class LessOptions(
   sourceMap: Boolean = false,
   sourceMapLessInline: Boolean = false,
   sourceMapFileInline: Boolean = false,
-  sourceMapRootpath: String = "",
-  rootpath: String = "",
+  sourceMapRootpath: Option[String] = None,
+  rootpath: Option[String] = None,
   maxLineLen: Int = -1,
   strictMath: Boolean = false,
   strictUnits: Boolean = false,
@@ -74,7 +74,7 @@ object LessResult extends DefaultJsonProtocol {
  * @param modulePaths The module paths to add.  This must at a minimum contain less on it, but should also contain
  *                    source-map and amdefine if source-map support is desired.
  */
-class LessCompiler(engine: ActorRef, shellSource: File, modulePaths: immutable.Seq[String]) {
+class LessCompiler(engine: ActorRef, shellSource: File, modulePaths: Seq[String]) {
 
   /**
    * Compile the given files using the given options.
@@ -84,7 +84,7 @@ class LessCompiler(engine: ActorRef, shellSource: File, modulePaths: immutable.S
    * @param timeout The timeout
    * @return The result of the execution
    */
-  def compile(filesToCompile: immutable.Seq[(File, File)], opts: LessOptions)(implicit timeout: Timeout): Future[LessExecutionResult] = {
+  def compile(filesToCompile: Seq[(File, File)], opts: LessOptions)(implicit timeout: Timeout): Future[LessExecutionResult] = {
 
     val bool = JsBoolean.apply _
 
@@ -108,8 +108,8 @@ class LessCompiler(engine: ActorRef, shellSource: File, modulePaths: immutable.S
       "globalVariables" -> JsString(""),
       "modifyVariables" -> JsString(""),
       "paths" -> JsArray(opts.includePaths.map(p => JsString(p.getAbsolutePath)).toList),
-      "rootpath" -> JsString(opts.rootpath),
-      "sourceMapRootpath" -> JsString(opts.sourceMapRootpath)
+      "rootpath" -> JsString(opts.rootpath.getOrElse("")),
+      "sourceMapRootpath" -> JsString(opts.sourceMapRootpath.getOrElse(""))
     )
 
     import ExecutionContext.Implicits.global
@@ -129,7 +129,7 @@ class LessCompiler(engine: ActorRef, shellSource: File, modulePaths: immutable.S
         JsObject(jsOptions ++ sourceMapArgs ++ inputOutputArgs)
     }).toString()
     val args = List(options)
-    (engine ? Engine.ExecuteJs(shellSource, args, modulePaths = modulePaths)).map {
+    (engine ? Engine.ExecuteJs(shellSource, args, modulePaths = modulePaths.to[immutable.Seq])).map {
       case JsExecutionResult(exitValue, output, error) => {
 
         val outputLines = new String(output.toArray).split("\n")

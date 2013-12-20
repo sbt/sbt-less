@@ -3,15 +3,14 @@ package com.typesafe.less
 import org.junit.runner.RunWith
 import org.specs2.runner.JUnitRunner
 import org.specs2.mutable.Specification
-import org.webjars.{WebJarExtractor, WebJarAssetLocator}
+import org.webjars.WebJarExtractor
 import akka.util.Timeout
 import scala.concurrent.duration._
 import org.specs2.time.NoTimeConversions
 import java.io.File
-import scala.concurrent.{Await, Future}
-import sbt._
-import com.typesafe.webdriver.jslint.TestActorSystem
-import com.typesafe.jse.{CommonNode, Rhino}
+import scala.concurrent.Await
+import _root_.sbt._
+import com.typesafe.jse.CommonNode
 import scala.collection.immutable
 import akka.actor.ActorSystem
 import spray.json._
@@ -97,9 +96,11 @@ class LessCompilerSpec extends Specification with NoTimeConversions {
 
     "support source maps" in new TestActorSystem {
       withTmpDir { dir =>
-        val aless = resourceToFile("a.less", dir / "a.less")
-        val sourceMap = dir / "a.css.map"
-        val result = compile(dir, LessOptions(sourceMap = true), aless -> dir / "a.css")
+        // Use different input/output dir
+        val aless = resourceToFile("a.less", dir / "in" / "a.less")
+        val sourceMap = dir / "out" / "a.css.map"
+        val css = dir / "out" / "a.css"
+        val result = compile(dir, LessOptions(sourceMap = true), aless -> css)
         result.head must beAnInstanceOf[LessSuccess]
         sourceMap.exists() must beTrue
 
@@ -107,6 +108,15 @@ class LessCompilerSpec extends Specification with NoTimeConversions {
         import DefaultJsonProtocol._
         val map = JsonParser(IO.read(sourceMap)).asJsObject
         map.fields("sources").convertTo[JsArray].elements.head must_== JsString("a.less")
+
+        // Check that the correct base path was used in the file
+        // Disabled until https://github.com/less/less.js/issues/1644 is fixed.
+
+        //println(IO.read(css))
+        //"""/\*# sourceMappingURL=(.*) \*/""".r.findFirstMatchIn(IO.read(css)) must beSome.like {
+        //  case groups => groups.group(1) must_== "a.css.map"
+        //}
+
       }
     }
 

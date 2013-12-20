@@ -1,0 +1,13 @@
+# Compile a less file
+
+> resources
+$ exists target/public/a.css
+$ exists target/public/a.css.map
+
+# Compile with compression
+
+> set LessKeys.compress := true
+> resources
+$ exists target/public/a.min.css
+$ exists target/public/a.min.css.map
+
