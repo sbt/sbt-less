@@ -1,7 +1,8 @@
-import com.typesafe.web.sbt.WebPlugin._
-
 webSettings
 
-JsEngineKeys.engineType in GlobalScope := JsEngineKeys.EngineType.CommonNode
+jsEngineSettings
+
+// FIXME: Shouldn't be required once an in-JVM option is available.
+JsEngineKeys.engineType := JsEngineKeys.EngineType.CommonNode
 
 lessSettings
