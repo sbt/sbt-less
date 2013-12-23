@@ -124,7 +124,7 @@ class LessCompilerSpec extends Specification with NoTimeConversions {
       withTmpDir { dir =>
         val aless = resourceToFile("a.less", dir / "a.less")
         val out = dir / "a.min.css"
-        val result = compile(dir, LessOptions(compress = true), aless -> out)
+        val result = compile(dir, LessOptions(compress = true, sourceMap = false), aless -> out)
         result.head must beAnInstanceOf[LessSuccess]
 
         out.length must beLessThan(aless.length)

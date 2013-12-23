@@ -3,15 +3,16 @@ package com.typesafe.less.sbt
 import sbt.Keys._
 import sbt._
 import sbt.KeyRanks._
-import scala.concurrent.Await
+import scala.concurrent.{Future, Await}
+import scala.concurrent.ExecutionContext.Implicits._
 import scala.concurrent.duration._
 import org.webjars.{FileSystemCache, WebJarExtractor}
 import com.typesafe.jse.{Rhino, PhantomJs, Node, CommonNode}
 import com.typesafe.jse.sbt.JsEnginePlugin.JsEngineKeys
 import com.typesafe.web.sbt.WebPlugin.WebKeys
 import xsbti.{CompileFailed, Severity, Problem}
-import com.typesafe.less.{LessCompiler, LessError, LessOptions, LessSuccess, LessCompileError}
-import com.typesafe.web.sbt.{LineBasedProblem, GeneralProblem}
+import com.typesafe.less.{LessResult, LessCompiler, LessError, LessOptions, LessSuccess, LessCompileError}
+import com.typesafe.web.sbt.{GeneralProblem, LineBasedProblem}
 
 /**
  * The WebDriver sbt plugin plumbing around the JslintEngine
@@ -59,26 +60,27 @@ object LessPlugin extends sbt.Plugin {
   import JsEngineKeys._
   import WebKeys._
 
+  private val defaults = LessOptions()
   def lessSettings = Seq(
-    silent := false,
-    verbose := false,
-    ieCompat := true,
-    compress := false,
-    cleancss := false,
-    includePaths := Nil,
-    sourceMap := true,
-    sourceMapLessInline := false,
-    sourceMapFileInline := false,
-    sourceMapRootpath := None,
-    maxLineLen := -1,
-    strictMath := false,
-    strictUnits := false,
-    strictImports := false,
-    optimization := 1,
+    silent := defaults.silent,
+    verbose := defaults.verbose,
+    ieCompat := defaults.ieCompat,
+    compress := defaults.compress,
+    cleancss := defaults.cleancss,
+    includePaths := defaults.includePaths,
+    sourceMap := defaults.sourceMap,
+    sourceMapLessInline := defaults.sourceMapLessInline,
+    sourceMapFileInline := defaults.sourceMapFileInline,
+    sourceMapRootpath := defaults.sourceMapRootpath,
+    maxLineLen := defaults.maxLineLen,
+    strictMath := defaults.strictMath,
+    strictUnits := defaults.strictUnits,
+    strictImports := defaults.strictImports,
+    optimization := defaults.optimization,
     color := ConsoleLogger.formatEnabled,
-    insecure := false,
-    rootpath := None,
-    relativeUrls := false,
+    insecure := defaults.insecure,
+    rootpath := defaults.rootpath,
+    relativeUrls := defaults.relativeUrls,
 
     lessOptionsIntermediate <<= (silent, verbose, ieCompat, compress, cleancss, includePaths, sourceMap, sourceMapLessInline,
         sourceMapFileInline, sourceMapRootpath, rootpath).apply((s, v, ie, co, cl, ip, sm, sl, sf, sr, r) =>
@@ -111,14 +113,18 @@ object LessPlugin extends sbt.Plugin {
       }
     },
 
-    lessSources <<= (sourceDirectory in Assets)(base => (base ** "*.less") --- base ** "_*"),
+    (lessSources in Assets) <<= (sourceDirectory in Assets)(base => (base ** "*.less") --- base ** "_*"),
+    (lessSources in TestAssets) <<= (sourceDirectory in TestAssets)(base => (base ** "*.less") --- base ** "_*"),
 
-    less <<= (state, lesscSource in LocalRootProject, lesscDeps in LocalRootProject,
-      unmanagedSourceDirectories in Assets, lessSources, resourceManaged in Assets,
-      lessOptions, engineType, streams, reporter).map(lessCompiler),
+    less <<= lessTask(Assets),
 
-    resourceGenerators in Compile <+= less
+    resourceGenerators in Compile <+= less,
+    resourceGenerators in Test <+= lessTask(TestAssets)
   )
+
+  private def lessTask(scope: Configuration) = (state, lesscSource in LocalRootProject, lesscDeps in LocalRootProject,
+    unmanagedSourceDirectories in scope, lessSources in scope, resourceManaged in scope,
+    lessOptions, engineType, streams, reporter, parallelism).map(lessCompiler)
 
   def lessCompiler(state: State,
                lessc: File,
@@ -129,7 +135,8 @@ object LessPlugin extends sbt.Plugin {
                lessOptions: LessOptions,
                engineType: EngineType.Value,
                s: TaskStreams,
-               reporter: LoggerReporter
+               reporter: LoggerReporter,
+               parallelism: Int
                 ): Seq[File] = {
 
     import com.typesafe.web.sbt.WebPlugin._
@@ -157,48 +164,52 @@ object LessPlugin extends sbt.Plugin {
 
     s.log.info(s"Compiling ${files.size} less files")
 
-    withActorRefFactory(state, this.getClass.getName) { arf =>
-      val engine = arf.actorOf(engineProps)
-      val compiler = new LessCompiler(engine, lessc, Seq(lessDeps.getCanonicalPath))
-      val result = Await.result(compiler.compile(files, lessOptions), duration)
+    val fileBatches = (files grouped Math.max(files.size / parallelism, 1)).toSeq
+    val pendingResultBatches: Seq[Future[Seq[(File, LessCompileError)]]] = fileBatches.map { sourceBatch =>
+      withActorRefFactory(state, this.getClass.getName) { arf =>
+        val engine = arf.actorOf(engineProps)
+        val compiler = new LessCompiler(engine, lessc, Seq(lessDeps.getCanonicalPath))
+        compiler.compile(files, lessOptions).map { result =>
+          if (!result.stdout.isEmpty) s.log.info(result.stdout)
+          if (!result.stderr.isEmpty) s.log.error(result.stderr)
 
-      if (!result.stdout.isEmpty) s.log.info(result.stdout)
-      if (!result.stderr.isEmpty) s.log.error(result.stderr)
-
-      val compileErrors = result.results.foldLeft[Seq[(File, LessCompileError)]](Nil) {
-        case (problems, LessSuccess(file, deps)) =>
-          // Handle caching here
-          problems
-        case (problems, LessError(file, errors)) =>
-          val f = new File(file)
-          problems ++ errors.map(f -> _)
+          result.results.foldLeft[Seq[(File, LessCompileError)]](Nil) {
+            case (problems, LessSuccess(file, deps)) =>
+              // Handle caching here
+              problems
+            case (problems, LessError(file, errors)) =>
+              val f = new File(file)
+              problems ++ errors.map(f -> _)
+          }
+        }
       }
-
-      def lineContent(file: File, line: Int) = {
-        IO.readLines(file).drop(line - 2).headOption
-      }
-
-      // Use distinct problems, because multiple entry points could have encountered the same compile error for the
-      // same file
-      val problems = compileErrors.distinct.map {
-        case (_, LessCompileError(Some(f), Some(line), Some(column), message)) =>
-          val file = new File(f)
-          new LineBasedProblem(message, Severity.Error, line, column - 1, lineContent(file, line).getOrElse(""), file)
-          
-        case (file, LessCompileError(_, _, _, message)) => new GeneralProblem(message, file)
-      }
-
-      reporter.reset()
-      problems.foreach(p => reporter.log(p.position, p.message, p.severity))
-      reporter.printSummary()
-
-      if (!problems.isEmpty) {
-        throw new LessCompilationFailedException(problems.toArray)
-      }
-
-      files.map(_._2)
     }
 
+    val compileErrors = Await.result(Future.sequence(pendingResultBatches), duration).flatten
+
+    def lineContent(file: File, line: Int) = {
+      IO.readLines(file).drop(line - 2).headOption
+    }
+
+    // Use distinct problems, because multiple entry points could have encountered the same compile error for the
+    // same file
+    val problems = compileErrors.distinct.map {
+      case (_, LessCompileError(Some(f), Some(line), Some(column), message)) =>
+        val file = new File(f)
+        new LineBasedProblem(message, Severity.Error, line, column - 1, lineContent(file, line).getOrElse(""), file)
+
+      case (file, LessCompileError(_, _, _, message)) => new GeneralProblem(message, file)
+    }
+
+    reporter.reset()
+    problems.filter(_.severity() == Severity.Error).foreach(p => reporter.log(p.position, p.message, p.severity))
+    reporter.printSummary()
+
+    if (problems.exists(_.severity() == Severity.Error)) {
+      throw new LessCompilationFailedException(problems.toArray)
+    }
+
+    files.map(_._2)
   }
 
   class LessCompilationFailedException(override val problems: Array[Problem])

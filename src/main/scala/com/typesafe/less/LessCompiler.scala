@@ -8,10 +8,32 @@ import akka.util.Timeout
 import scala.concurrent.{ExecutionContext, Future}
 import com.typesafe.jse.Engine
 import com.typesafe.jse.Engine.JsExecutionResult
-import org.webjars.WebJarExtractor
 import scala.util.control.NonFatal
 import scala.collection.immutable
 
+/**
+ * The less options.
+ * 
+ * @param silent Suppress output of error messages.
+ * @param verbose Be verbose.
+ * @param ieCompat Do IE compatibility checks.
+ * @param compress Compress output by removing some whitespaces.
+ * @param cleancss Compress output using clean-css.
+ * @param includePaths The include paths to search when looking for LESS imports.
+ * @param sourceMap Outputs a v3 sourcemap.
+ * @param sourceMapLessInline Whether to embed the less code in the source map.
+ * @param sourceMapFileInline Whether the source map should be embedded in the output file.
+ * @param sourceMapRootpath Adds this path onto the sourcemap filename and less file paths.
+ * @param maxLineLen Maximum line length.
+ * @param strictMath Requires brackets. This option may default to true and be removed in future.
+ * @param strictUnits Whether all unit should be strict, or if mixed units are allowed.
+ * @param strictImports Whether imports should be strict.
+ * @param optimization Set the parser's optimization level.
+ * @param color Whether LESS output should be colorised.
+ * @param insecure Allow imports from insecure https hosts.
+ * @param rootpath Set rootpath for url rewriting in relative imports and urls.
+ * @param relativeUrls Re-write relative urls to the base less file.
+ */
 case class LessOptions(
   silent: Boolean = false,
   verbose: Boolean = false,
@@ -19,7 +41,7 @@ case class LessOptions(
   compress: Boolean = false,
   cleancss: Boolean = false,
   includePaths: Seq[File] = Seq(),
-  sourceMap: Boolean = false,
+  sourceMap: Boolean = true,
   sourceMapLessInline: Boolean = false,
   sourceMapFileInline: Boolean = false,
   sourceMapRootpath: Option[String] = None,
@@ -34,15 +56,51 @@ case class LessOptions(
   relativeUrls: Boolean = false
 )
 
+/** The result of compiling a less file. */
 sealed trait LessResult {
+
+  /** The input file that was compiled. */
   def inputFile: String
 }
+
+/**
+ * A successful less compilation.
+ *
+ * @param inputFile The file that was compiled.
+ * @param dependsOn The files this file depends on.
+ */
 case class LessSuccess(inputFile: String, dependsOn: Set[String]) extends LessResult
+
+/**
+ * A compile error.
+ *
+ * @param filename The file that was being compiled - may be an imported file.
+ * @param line The line number the compilation error happened on.
+ * @param column The column that the compilation error occurred at.
+ * @param message The error message.
+ */
 case class LessCompileError(filename: Option[String], line: Option[Int], column: Option[Int], message: String)
+
+/**
+ * An erroneous less compilation.
+ *
+ * @param inputFile The file that was attempted to be compiled.
+ * @param compileErrors The list of compile errors.
+ */
 case class LessError(inputFile: String, compileErrors: Seq[LessCompileError]) extends LessResult
 
+/**
+ * The result of compiling many less files.
+ *
+ * @param results The list of results.
+ * @param stdout Everything that was logged to standard out.
+ * @param stderr Everything that was logged to standard in.
+ */
 case class LessExecutionResult(results: Seq[LessResult], stdout: String, stderr: String)
 
+/**
+ * JSON protocol for the LESS result deserialisation.
+ */
 object LessResult extends DefaultJsonProtocol {
 
   implicit val lessSuccess: RootJsonFormat[LessSuccess] = jsonFormat2(LessSuccess.apply)
@@ -53,6 +111,7 @@ object LessResult extends DefaultJsonProtocol {
     def read(json: JsValue) = json.asJsObject.fields.get("status") match {
       case Some(JsString("success")) => json.convertTo[LessSuccess]
       case Some(JsString("failure")) => json.convertTo[LessError]
+      case _ => throw new IllegalArgumentException("Unable to extract less result from JSON")
     }
 
     def writeStatus[C](status: String, c: C)(implicit format : JsonFormat[C]) = {
