@@ -52,12 +52,13 @@ The compiler allows most of the same options to be specified as the less compile
 * *rootpath*: Set rootpath for url rewriting in relative imports and urls.
 * *relativeUrls*: Re-write relative urls to the base less file. Defaults to false.
 
-By default [Rhino](https://developer.mozilla.org/en/docs/Rhino) is used as the JavaScript engine and runs entirely within the JVM requiring no additional downloads.  [common-node](http://olegp.github.io/common-node//) is supported as a native engine option for fast and native JavaScript execution.  common-node is [Node](http://nodejs.org/) with library support for [CommonJS](http://wiki.commonjs.org/wiki/CommonJS).  To use common-node instead of Rhino declare the following in your build file:
+At present the only supported engine is [Node](http://nodejs.org/).
+In-jvm options should become available soon. To use Node declare the following in your build file:
 
     import com.typesafe.jse.sbt.JsEnginePlugin.JsEngineKeys
 
-    JsEngineKeys.engineType := JsEngineKeys.EngineType.CommonNode
+    JsEngineKeys.engineType := JsEngineKeys.EngineType.Node
 
-common-node is required to be available on your shell's path in order for it to be used. To check for its availability simply type `common-node`.
+node is required to be available on your shell's path in order for it to be used. To check for its availability simply type `node`.
 
 &copy; Typesafe Inc., 2013  

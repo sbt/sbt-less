@@ -192,18 +192,17 @@ class LessCompiler(engine: ActorRef, shellSource: File, modulePaths: Seq[String]
       case JsExecutionResult(exitValue, output, error) => {
 
         val outputLines = new String(output.toArray).split("\n")
+        val stderr = new String(error.toArray)
 
         // Last line of the results should be the status
         val status = outputLines.lastOption.getOrElse("{}")
-
-        val stderr = new String(error.toArray)
 
         // Try and parse
         try {
           import DefaultJsonProtocol._
           val results = JsonParser(status).convertTo[Seq[LessResult]]
+          // Don't include the status line (ie the last line) in stdout, we exclude it by doing dropRight(1).
           val stdout = if (outputLines.isEmpty) "" else outputLines.dropRight(1).mkString("\n")
-
           LessExecutionResult(results, stdout, stderr)
         } catch {
           case NonFatal(_) => {
