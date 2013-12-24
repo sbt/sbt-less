@@ -141,7 +141,8 @@ object LessPlugin extends sbt.Plugin {
 
     import com.typesafe.web.sbt.WebPlugin._
 
-    implicit val duration = 1 hour
+    // FIXME: Should be made configurable.
+    implicit val duration = 1.hour
 
     val engineProps = engineType match {
       case EngineType.CommonNode => CommonNode.props()

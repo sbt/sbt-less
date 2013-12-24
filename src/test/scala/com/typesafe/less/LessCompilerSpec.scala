@@ -10,10 +10,10 @@ import org.specs2.time.NoTimeConversions
 import java.io.File
 import scala.concurrent.Await
 import _root_.sbt._
-import com.typesafe.jse.CommonNode
 import scala.collection.immutable
 import akka.actor.ActorSystem
 import spray.json._
+import com.typesafe.jse.Node
 
 @RunWith(classOf[JUnitRunner])
 class LessCompilerSpec extends Specification with NoTimeConversions {
@@ -203,7 +203,7 @@ class LessCompilerSpec extends Specification with NoTimeConversions {
     extractor.extractWebJarTo("source-map", dir)
     extractor.extractWebJarTo("amdefine", dir)
     val lessc = resourceToFile("lessc.js", dir / "lessc.js")
-    val engine = system.actorOf(CommonNode.props(), "engine")
+    val engine = system.actorOf(Node.props(), "engine")
     new LessCompiler(engine, lessc.getAbsoluteFile, List((dir / "lib").getAbsolutePath))
   }
 
