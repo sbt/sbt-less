@@ -1,21 +1,15 @@
-(function (externalArgs) {
+/*global process, require */
 
-    var path = require('path'),
-        fs = require('fs'),
-        os = require('os'),
-        mkdirp;
+(function () {
 
-
-    var args;
-    try {
-        args = require("system").args;
-    } catch (e) {
-        args = Array.prototype.slice.call(externalArgs);
-        args.unshift("", "");
-    }
+    var args = process.argv,
+        fs = require("fs"),
+        path = require("path");
 
     // Import less, expects it to be in the module path somewhere
     var less = require("less/index");
+
+    var mkdirp;
 
     var ensureDirectory = function (filepath) {
         var dir = path.dirname(filepath),
@@ -23,8 +17,12 @@
             existsSync = fs.existsSync || path.existsSync;
         if (!existsSync(dir)) {
             if (mkdirp === undefined) {
-                try {mkdirp = require('mkdirp');}
-                catch(e) { mkdirp = null; }
+                try {
+                    mkdirp = require('mkdirp');
+                }
+                catch (e) {
+                    mkdirp = null;
+                }
             }
             cmd = mkdirp && mkdirp.sync || fs.mkdirSync;
             cmd(dir);
@@ -35,7 +33,7 @@
     var results = [];
 
     // Called when less has finished parsing a file
-    var finishParsing = function(result) {
+    var finishParsing = function (result) {
         results.push(result);
         if (jobs.length == results.length) {
             // If all files are passed, write the results to standard out
@@ -44,11 +42,11 @@
     };
 
     // Called when an error is encountered
-    var reportError = function(input, err) {
-        finishParsing({status: "failure", inputFile: input, compileErrors: [err]})
+    var reportError = function (input, err) {
+        finishParsing({status: "failure", inputFile: input, compileErrors: [err]});
     };
 
-    var doJob = function(options) {
+    var doJob = function (options) {
         var input = options.input;
         if (options.verbose) {
             console.log("Compiling " + input);
@@ -57,7 +55,7 @@
         var output = options.output;
 
         if (!options.sourceMapFileInline) {
-            var writeSourceMap = function(output) {
+            var writeSourceMap = function (output) {
                 var filename = options.sourceMapFilename;
                 ensureDirectory(filename);
                 fs.writeFileSync(filename, output, 'utf8');
@@ -77,7 +75,7 @@
             options.paths = [path.dirname(input)].concat(options.paths);
             options.filename = input;
 
-            var parser = new(less.Parser)(options);
+            var parser = new (less.Parser)(options);
             parser.parse(data, function (err, tree) {
                 if (err) {
                     reportError(input, err);
@@ -102,17 +100,20 @@
                             strictUnits: options.strictUnits
                         });
                         ensureDirectory(output);
-                        fs.writeFileSync(output, css, 'utf8');
+                        fs.writeFile(output, css, 'utf8');
                         if (options.verbose) {
                             console.log("Wrote " + output);
                         }
 
                         var imports = [];
-                        for (filename in parser.imports.files) {
-                            imports.push(filename);
+                        var files = parser.imports.files;
+                        for (var file in files) {
+                            if (files.hasOwnProperty(file)) {
+                                imports.push(file);
+                            }
                         }
 
-                        finishParsing({status: "success", inputFile: input, dependsOn: imports})
+                        finishParsing({status: "success", inputFile: input, dependsOn: imports});
                     } catch (e) {
                         reportError(input, e);
                     }
@@ -124,7 +125,5 @@
 
     };
 
-    for (var i = 0; i < jobs.length; i++) {
-        doJob(jobs[i]);
-    }
-}(arguments));
+    jobs.forEach(doJob);
+}());
