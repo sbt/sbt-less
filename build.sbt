@@ -12,7 +12,7 @@ libraryDependencies ++= Seq(
   "com.typesafe.akka" %% "akka-actor" % "2.2.3",
   "org.webjars" % "less" % "1.5.1",
   "org.webjars" % "source-map" % "0.1.31",
-  "org.webjars" % "webjars-locator" % "0.7-SNAPSHOT",
+  "org.webjars" % "webjars-locator" % "0.7",
   "com.typesafe" %% "jse" % "1.0.0-SNAPSHOT",
   "org.specs2" %% "specs2" % "2.2.2" % "test",
   "junit" % "junit" % "4.11" % "test",
@@ -20,7 +20,6 @@ libraryDependencies ++= Seq(
 )
 
 resolvers ++= Seq(
-  "Local Maven Repository" at "file://"+Path.userHome.absolutePath+"/.m2/repository",
   Resolver.url("sbt snapshot plugins", url("http://repo.scala-sbt.org/scalasbt/sbt-plugin-snapshots"))(Resolver.ivyStylePatterns),
   Resolver.sonatypeRepo("snapshots"),
   "Typesafe Snapshots Repository" at "http://repo.typesafe.com/typesafe/snapshots/"
