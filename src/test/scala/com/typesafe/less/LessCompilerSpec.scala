@@ -154,6 +154,25 @@ class LessCompilerSpec extends Specification with NoTimeConversions {
       }
     }
 
+    "support importing files from other paths" in new TestActorSystem {
+      withTmpDir { dir =>
+        val includePath = dir / "includes"
+        val aless = resourceToFile("a.less", includePath / "a.less")
+        val mainPath = dir / "main"
+        val importless = resourceToFile("import.less", mainPath / "import.less")
+        val css = dir / "out" / "import.css"
+
+        val result = compile(dir, LessOptions(includePaths = Seq(includePath)), importless -> css)
+
+        result.headOption must beSome.like {
+          case LessSuccess(file, depends) =>
+            file must_== importless.getAbsolutePath
+            depends must containTheSameElementsAs(Seq(aless.getAbsolutePath))
+        }
+        css.exists() must beTrue
+      }
+    }
+
   }
 
   def withTmpDir[T](block: File => T) = {
