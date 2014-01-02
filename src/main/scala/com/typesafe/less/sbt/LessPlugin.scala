@@ -31,8 +31,8 @@ object LessPlugin extends sbt.Plugin {
     val lesscDepsDir = SettingKey[File]("lessc-deps-dir", "The extracted lessc dependencies directory.")
     val lesscDeps = TaskKey[File]("lessc-deps", "Extract the lessc dependencies.", CSetting)
     val lesscDepsCacheFile = SettingKey[File]("lessc-deps-cache", "The cache file used to store the WebJarExtractor", CSetting)
-    val lessOptions = SettingKey[LessOptions]("less-options", "The less options", CSetting)
-    val lessOptionsIntermediate = SettingKey[(Int, Boolean, Boolean, Boolean, Int, Boolean, Boolean, Boolean) => LessOptions]("less-options-intermediate")
+    val lessOptions = TaskKey[LessOptions]("less-options", "The less options", CSetting)
+    val lessOptionsIntermediate = TaskKey[(Int, Boolean, Boolean, Boolean, Int, Boolean, Boolean, Boolean) => LessOptions]("less-options-intermediate")
 
     // Less options
     val silent = SettingKey[Boolean]("less-silent", "Suppress output of error messages.", ASetting)
@@ -41,6 +41,8 @@ object LessPlugin extends sbt.Plugin {
     val compress = SettingKey[Boolean]("less-compress", "Compress output by removing some whitespaces.", ASetting)
     val cleancss = SettingKey[Boolean]("less-cleancss", "Compress output using clean-css.", ASetting)
     val includePaths = SettingKey[Seq[File]]("less-include-paths", "The include paths to search when looking for LESS imports", ASetting)
+    val includePathGenerators = SettingKey[Seq[Task[Seq[File]]]]("less-include-path-generators", "The generators for include paths", ASetting)
+    val allIncludePaths = TaskKey[Seq[File]]("less-all-include-paths", "All the include paths", DTask)
     val sourceMap = SettingKey[Boolean]("less-source-map", "Outputs a v3 sourcemap.", ASetting)
     val sourceMapLessInline = SettingKey[Boolean]("less-source-map-less-inline", "Whether to embed the less code in the source map", ASetting)
     val sourceMapFileInline = SettingKey[Boolean]("less-source-map-file-inline", "Whether the source map should be embedded in the output file", ASetting)
@@ -61,7 +63,8 @@ object LessPlugin extends sbt.Plugin {
   import WebKeys._
 
   private val defaults = LessOptions()
-  def lessSettings = Seq(
+
+  private val unscopedSettings = Seq(
     silent := defaults.silent,
     verbose := defaults.verbose,
     ieCompat := defaults.ieCompat,
@@ -82,13 +85,24 @@ object LessPlugin extends sbt.Plugin {
     rootpath := defaults.rootpath,
     relativeUrls := defaults.relativeUrls,
 
-    lessOptionsIntermediate <<= (silent, verbose, ieCompat, compress, cleancss, includePaths, sourceMap, sourceMapLessInline,
-        sourceMapFileInline, sourceMapRootpath, rootpath).apply((s, v, ie, co, cl, ip, sm, sl, sf, sr, r) =>
-      LessOptions(s, v, ie, co, cl, ip, sm, sl, sf, sr, r, _, _, _, _, _, _, _, _)),
+    includePathGenerators := Nil,
+    includePathGenerators <+= includePaths.map(identity),
+    includePathGenerators <+= extractWebJars.map(webjars => Seq(webjars)),
+    allIncludePaths <<= Defaults.generate(includePathGenerators),
+
+    lessOptionsIntermediate <<= (silent, verbose, ieCompat, compress, cleancss, allIncludePaths, sourceMap, sourceMapLessInline,
+      sourceMapFileInline, sourceMapRootpath, rootpath).map { (s, v, ie, co, cl, ip, sm, sl, sf, sr, r) =>
+      LessOptions(s, v, ie, co, cl, ip, sm, sl, sf, sr, r, _, _, _, _, _, _, _, _)
+    },
 
     lessOptions <<= (lessOptionsIntermediate, maxLineLen, strictMath, strictUnits, strictImports, optimization, color,
-      insecure, relativeUrls).apply((loi, mll, sm, su, si, o, c, i, rl) => loi(mll, sm, su, si, o, c, i, rl)),
+      insecure, relativeUrls).map((loi, mll, sm, su, si, o, c, i, rl) => loi(mll, sm, su, si, o, c, i, rl)),
 
+    lessSources <<= sourceDirectory(base => (base ** "*.less") --- base ** "_*")
+
+  )
+
+  def lessSettings = Seq(
     lessDir in LocalRootProject <<= (target in LocalRootProject).apply(_ / "lessc"),
     lesscDepsDir in LocalRootProject <<= (lessDir in LocalRootProject).apply(_ / "deps"),
     lesscDepsCacheFile in LocalRootProject <<= (lessDir in LocalRootProject).apply(_ / "deps.cache"),
@@ -113,19 +127,22 @@ object LessPlugin extends sbt.Plugin {
       }
     },
 
-    (lessSources in Assets) <<= (sourceDirectory in Assets)(base => (base ** "*.less") --- base ** "_*"),
-    (lessSources in TestAssets) <<= (sourceDirectory in TestAssets)(base => (base ** "*.less") --- base ** "_*"),
+    less in Assets <<= lessTask(Assets),
+    less in TestAssets <<= lessTask(TestAssets),
+    less <<= less in Assets,
 
-    less <<= lessTask(Assets),
+    resourceGenerators in Compile <+= (less in Assets),
+    resourceGenerators in Test <+= (less in TestAssets)
 
-    resourceGenerators in Compile <+= less,
-    resourceGenerators in Test <+= lessTask(TestAssets)
-  )
+  ) ++ inConfig(Assets)(unscopedSettings) ++ inConfig(TestAssets)(unscopedSettings)
 
   private def lessTask(scope: Configuration) = (state, lesscSource in LocalRootProject, lesscDeps in LocalRootProject,
     unmanagedSourceDirectories in scope, lessSources in scope, resourceManaged in scope,
-    lessOptions, engineType, streams, reporter, parallelism).map(lessCompiler)
+    lessOptions in scope, engineType, streams, reporter, parallelism).map(lessCompiler)
 
+  /**
+   * The less compiler task
+   */
   def lessCompiler(state: State,
                lessc: File,
                lessDeps: File,

@@ -1,0 +1,6 @@
+# Compile a less file
+
+> resources
+$ exists target/public/a.css
+$ exists target/public/a.css.map
+
