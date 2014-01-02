@@ -188,7 +188,7 @@ class LessCompiler(engine: ActorRef, shellSource: File, modulePaths: Seq[String]
         JsObject(jsOptions ++ sourceMapArgs ++ inputOutputArgs)
     }).toString()
     val args = List(options)
-    (engine ? Engine.ExecuteJs(shellSource, args, modulePaths = modulePaths.to[immutable.Seq])).map {
+    (engine ? Engine.ExecuteJs(shellSource, args, timeout = timeout.duration, modulePaths = modulePaths.to[immutable.Seq])).map {
       case JsExecutionResult(exitValue, output, error) => {
 
         val outputLines = new String(output.toArray).split("\n")

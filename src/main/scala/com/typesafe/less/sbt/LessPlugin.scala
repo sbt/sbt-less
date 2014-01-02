@@ -13,6 +13,7 @@ import com.typesafe.web.sbt.WebPlugin.WebKeys
 import xsbti.{CompileFailed, Severity, Problem}
 import com.typesafe.less.{LessResult, LessCompiler, LessError, LessOptions, LessSuccess, LessCompileError}
 import com.typesafe.web.sbt.{GeneralProblem, LineBasedProblem}
+import akka.util.Timeout
 
 /**
  * The WebDriver sbt plugin plumbing around the JslintEngine
@@ -159,7 +160,7 @@ object LessPlugin extends sbt.Plugin {
     import com.typesafe.web.sbt.WebPlugin._
 
     // FIXME: Should be made configurable.
-    implicit val duration = 1.hour
+    implicit val timeout = Timeout(1.hour)
 
     val engineProps = engineType match {
       case EngineType.CommonNode => CommonNode.props()
@@ -203,7 +204,7 @@ object LessPlugin extends sbt.Plugin {
       }
     }
 
-    val compileErrors = Await.result(Future.sequence(pendingResultBatches), duration).flatten
+    val compileErrors = Await.result(Future.sequence(pendingResultBatches), timeout.duration).flatten
 
     def lineContent(file: File, line: Int) = {
       IO.readLines(file).drop(line - 2).headOption
