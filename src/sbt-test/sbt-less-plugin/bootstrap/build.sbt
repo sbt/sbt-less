@@ -1,9 +1,9 @@
 webSettings
 
-//jsEngineSettings
+jsEngineSettings
 
-// FIXME: Shouldn't be required once an in-JVM option is available.
-JsEngineKeys.engineType := JsEngineKeys.EngineType.CommonNode
+// FIXME: Shouldn't be required once Trireme is the default.
+JsEngineKeys.engineType := JsEngineKeys.EngineType.Trireme
 
 lessSettings
 
