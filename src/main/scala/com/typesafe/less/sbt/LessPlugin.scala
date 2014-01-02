@@ -7,7 +7,7 @@ import scala.concurrent.{Future, Await}
 import scala.concurrent.ExecutionContext.Implicits._
 import scala.concurrent.duration._
 import org.webjars.{FileSystemCache, WebJarExtractor}
-import com.typesafe.jse.{Rhino, PhantomJs, Node, CommonNode}
+import com.typesafe.jse.{Rhino, PhantomJs, Node, CommonNode, Trireme}
 import com.typesafe.jse.sbt.JsEnginePlugin.JsEngineKeys
 import com.typesafe.web.sbt.WebPlugin.WebKeys
 import xsbti.{CompileFailed, Severity, Problem}
@@ -167,6 +167,8 @@ object LessPlugin extends sbt.Plugin {
       case EngineType.Node => Node.props()
       case EngineType.PhantomJs => PhantomJs.props()
       case EngineType.Rhino => Rhino.props()
+      case EngineType.Trireme => Trireme.props()
+
     }
 
     val files = (lessSources.get x relativeTo(sourceFolders)).map {

@@ -13,13 +13,15 @@ import _root_.sbt._
 import scala.collection.immutable
 import akka.actor.ActorSystem
 import spray.json._
-import com.typesafe.jse.Node
+import com.typesafe.jse.Trireme
 
 @RunWith(classOf[JUnitRunner])
 class LessCompilerSpec extends Specification with NoTimeConversions {
 
-  implicit val duration = 5.seconds
+  implicit val duration = 15.seconds
   implicit val timeout = Timeout(duration)
+
+  sequential
 
   "the less compiler" should {
     "compile a trivial file" in new TestActorSystem {
@@ -203,7 +205,7 @@ class LessCompilerSpec extends Specification with NoTimeConversions {
     extractor.extractWebJarTo("source-map", dir)
     extractor.extractWebJarTo("amdefine", dir)
     val lessc = resourceToFile("lessc.js", dir / "lessc.js")
-    val engine = system.actorOf(Node.props(), "engine")
+    val engine = system.actorOf(Trireme.props(), "engine")
     new LessCompiler(engine, lessc.getAbsoluteFile, List((dir / "lib").getAbsolutePath))
   }
 
