@@ -6,18 +6,15 @@ import sbt.KeyRanks._
 import scala.concurrent.{Future, Await}
 import scala.concurrent.ExecutionContext.Implicits._
 import scala.concurrent.duration._
-import org.webjars.{FileSystemCache, WebJarExtractor}
 import com.typesafe.jse.{Rhino, PhantomJs, Node, CommonNode, Trireme}
 import com.typesafe.jse.sbt.JsEnginePlugin.JsEngineKeys
 import com.typesafe.web.sbt.WebPlugin.WebKeys
 import xsbti.{CompileFailed, Severity, Problem}
-import com.typesafe.less.{LessResult, LessCompiler, LessError, LessOptions, LessSuccess, LessCompileError}
-import com.typesafe.web.sbt.{GeneralProblem, LineBasedProblem}
+import com.typesafe.less.{LessCompiler, LessError, LessOptions, LessSuccess, LessCompileError}
+import com.typesafe.web.sbt.{WebPlugin, GeneralProblem, LineBasedProblem}
 import akka.util.Timeout
+import scala.collection.immutable
 
-/**
- * The WebDriver sbt plugin plumbing around the JslintEngine
- */
 object LessPlugin extends sbt.Plugin {
 
   object LessKeys {
@@ -28,10 +25,6 @@ object LessPlugin extends sbt.Plugin {
 
     // Internal
     val lesscSource = TaskKey[File]("lessc-source", "The extracted lessc source file.", CSetting)
-    val lessDir = SettingKey[File]("less-dir", "The working directory for less.", CSetting)
-    val lesscDepsDir = SettingKey[File]("lessc-deps-dir", "The extracted lessc dependencies directory.")
-    val lesscDeps = TaskKey[File]("lessc-deps", "Extract the lessc dependencies.", CSetting)
-    val lesscDepsCacheFile = SettingKey[File]("lessc-deps-cache", "The cache file used to store the WebJarExtractor", CSetting)
     val lessOptions = TaskKey[LessOptions]("less-options", "The less options", CSetting)
     val lessOptionsIntermediate = TaskKey[(Int, Boolean, Boolean, Boolean, Int, Boolean, Boolean, Boolean) => LessOptions]("less-options-intermediate")
 
@@ -104,28 +97,13 @@ object LessPlugin extends sbt.Plugin {
   )
 
   def lessSettings = Seq(
-    lessDir in LocalRootProject <<= (target in LocalRootProject).apply(_ / "lessc"),
-    lesscDepsDir in LocalRootProject <<= (lessDir in LocalRootProject).apply(_ / "deps"),
-    lesscDepsCacheFile in LocalRootProject <<= (lessDir in LocalRootProject).apply(_ / "deps.cache"),
-    lesscDeps in LocalRootProject <<= (lesscDepsCacheFile, lesscDepsDir).map { (cacheFile, dir) =>
-      cacheFile.getParentFile.mkdirs()
-      val cache = new FileSystemCache(cacheFile)
-      val extractor = new WebJarExtractor(cache, LessPlugin.getClass.getClassLoader)
-      extractor.extractWebJarTo("less", dir)
-      extractor.extractWebJarTo("source-map", dir)
-      extractor.extractWebJarTo("amdefine", dir)
-      cache.save()
-      dir / "lib"
-    },
-    lesscSource in LocalRootProject <<= (lessDir in LocalRootProject).map { dir =>
-      val is = this.getClass.getClassLoader.getResourceAsStream("lessc.js")
-      try {
-        val f = dir / "lessc.js"
-        IO.transfer(is, f)
-        f
-      } finally {
-        is.close()
-      }
+    lesscSource in LocalRootProject <<= (target in LocalRootProject).map {
+      target =>
+        WebPlugin.copyResourceTo(
+          target / "less-plugin",
+          "lessc.js",
+          LessPlugin.getClass.getClassLoader
+        )
     },
 
     less in Assets <<= lessTask(Assets),
@@ -137,7 +115,7 @@ object LessPlugin extends sbt.Plugin {
 
   ) ++ inConfig(Assets)(unscopedSettings) ++ inConfig(TestAssets)(unscopedSettings)
 
-  private def lessTask(scope: Configuration) = (state, lesscSource in LocalRootProject, lesscDeps in LocalRootProject,
+  private def lessTask(scope: Configuration) = (state, lesscSource in LocalRootProject, nodeModules in Plugin,
     unmanagedSourceDirectories in scope, lessSources in scope, resourceManaged in scope,
     lessOptions in scope, engineType, streams, reporter, parallelism).map(lessCompiler)
 
@@ -146,7 +124,7 @@ object LessPlugin extends sbt.Plugin {
    */
   def lessCompiler(state: State,
                lessc: File,
-               lessDeps: File,
+               nodeModules: File,
                sourceFolders: Seq[File],
                lessSources: PathFinder,
                outputDir: File,
@@ -159,15 +137,14 @@ object LessPlugin extends sbt.Plugin {
 
     import com.typesafe.web.sbt.WebPlugin._
 
-    // FIXME: Should be made configurable.
-    implicit val timeout = Timeout(1.hour)
+    val timeoutPerSource = 10.seconds
 
     val engineProps = engineType match {
       case EngineType.CommonNode => CommonNode.props()
-      case EngineType.Node => Node.props()
+      case EngineType.Node => Node.props(stdModulePaths = immutable.Seq(nodeModules.getCanonicalPath))
       case EngineType.PhantomJs => PhantomJs.props()
       case EngineType.Rhino => Rhino.props()
-      case EngineType.Trireme => Trireme.props()
+      case EngineType.Trireme => Trireme.props(stdModulePaths = immutable.Seq(nodeModules.getCanonicalPath))
 
     }
 
@@ -187,26 +164,27 @@ object LessPlugin extends sbt.Plugin {
 
     val fileBatches = (files grouped Math.max(files.size / parallelism, 1)).toSeq
     val pendingResultBatches: Seq[Future[Seq[(File, LessCompileError)]]] = fileBatches.map { sourceBatch =>
+      implicit val timeout = Timeout(timeoutPerSource * sourceBatch.size)
       withActorRefFactory(state, this.getClass.getName) { arf =>
         val engine = arf.actorOf(engineProps)
-        val compiler = new LessCompiler(engine, lessc, Seq(lessDeps.getCanonicalPath))
+        val compiler = new LessCompiler(engine, lessc)
         compiler.compile(files, lessOptions).map { result =>
           if (!result.stdout.isEmpty) s.log.info(result.stdout)
           if (!result.stderr.isEmpty) s.log.error(result.stderr)
 
           result.results.foldLeft[Seq[(File, LessCompileError)]](Nil) {
-            case (problems, LessSuccess(file, deps)) =>
+            case (compileProbs, LessSuccess(file, deps)) =>
               // Handle caching here
-              problems
-            case (problems, LessError(file, errors)) =>
+              compileProbs
+            case (compileProbs, LessError(file, errors)) =>
               val f = new File(file)
-              problems ++ errors.map(f -> _)
+              compileProbs ++ errors.map(f -> _)
           }
         }
       }
     }
 
-    val compileErrors = Await.result(Future.sequence(pendingResultBatches), timeout.duration).flatten
+    val compileErrors = Await.result(Future.sequence(pendingResultBatches), timeoutPerSource * files.size).flatten
 
     def lineContent(file: File, line: Int) = {
       IO.readLines(file).drop(line - 2).headOption

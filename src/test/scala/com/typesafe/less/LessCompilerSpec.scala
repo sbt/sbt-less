@@ -9,11 +9,11 @@ import scala.concurrent.duration._
 import org.specs2.time.NoTimeConversions
 import java.io.File
 import scala.concurrent.Await
-import _root_.sbt._
 import scala.collection.immutable
 import akka.actor.ActorSystem
 import spray.json._
 import com.typesafe.jse.Trireme
+import scala.io.Source
 
 @RunWith(classOf[JUnitRunner])
 class LessCompilerSpec extends Specification with NoTimeConversions {
@@ -26,8 +26,8 @@ class LessCompilerSpec extends Specification with NoTimeConversions {
   "the less compiler" should {
     "compile a trivial file" in new TestActorSystem {
       withTmpDir { dir =>
-        val aless = resourceToFile("a.less", dir / "a.less")
-        val acss = dir / "a.css"
+        val aless = resourceToFile("a.less")
+        val acss = new File(dir, "a.css")
         val result = compile(dir, LessOptions(), aless -> acss)
         result.headOption must beSome.like {
           case LessSuccess(file, depends) =>
@@ -40,8 +40,8 @@ class LessCompilerSpec extends Specification with NoTimeConversions {
 
     "report errors correctly for a file with errors in it" in new TestActorSystem {
       withTmpDir { dir =>
-        val badless = resourceToFile("bad.less", dir / "bad.less")
-        val result = compile(dir, LessOptions(), badless -> dir / "bad.css")
+        val badless = resourceToFile("bad.less")
+        val result = compile(dir, LessOptions(), badless -> new File(dir, "bad.css"))
         result.headOption must beSome.like {
           case LessError(file, errors) =>
             file must_== badless.getAbsolutePath
@@ -55,8 +55,8 @@ class LessCompilerSpec extends Specification with NoTimeConversions {
 
     "report errors correctly for a missing file" in new TestActorSystem {
       withTmpDir { dir =>
-        val missingless = dir / "missing.less"
-        val result = compile(dir, LessOptions(), missingless -> dir / "missing.css")
+        val missingless = new File(dir, "missing.less")
+        val result = compile(dir, LessOptions(), missingless -> new File(dir, "missing.css"))
         result.headOption must beSome.like {
           case LessError(file, errors) =>
             file must_== missingless.getAbsolutePath
@@ -68,8 +68,8 @@ class LessCompilerSpec extends Specification with NoTimeConversions {
 
     "report errors correctly for bad rendering" in new TestActorSystem {
       withTmpDir { dir =>
-        val badrender = resourceToFile("badrender.less", dir / "badrender.less")
-        val result = compile(dir, LessOptions(), badrender -> dir / "badrender.css")
+        val badrender = resourceToFile("badrender.less")
+        val result = compile(dir, LessOptions(), badrender -> new File(dir, "badrender.css"))
         result.headOption must beSome.like {
           case LessError(file, errors) =>
             file must_== badrender.getAbsolutePath
@@ -83,9 +83,9 @@ class LessCompilerSpec extends Specification with NoTimeConversions {
 
     "support files with imports" in new TestActorSystem {
       withTmpDir { dir =>
-        val aless = resourceToFile("a.less", dir / "a.less")
-        val importless = resourceToFile("import.less", dir / "import.less")
-        val css = dir / "import.css"
+        val aless = resourceToFile("a.less")
+        val importless = resourceToFile("import.less")
+        val css = new File(dir, "import.css")
         val result = compile(dir, LessOptions(), importless -> css)
         result.headOption must beSome.like {
           case LessSuccess(file, depends) =>
@@ -99,16 +99,16 @@ class LessCompilerSpec extends Specification with NoTimeConversions {
     "support source maps" in new TestActorSystem {
       withTmpDir { dir =>
         // Use different input/output dir
-        val aless = resourceToFile("a.less", dir / "in" / "a.less")
-        val sourceMap = dir / "out" / "a.css.map"
-        val css = dir / "out" / "a.css"
+        val aless = resourceToFile("a.less")
+        val sourceMap = new File(dir, "out" + File.separator + "a.css.map")
+        val css = new File(dir, "out" + File.separator + "a.css")
         val result = compile(dir, LessOptions(sourceMap = true), aless -> css)
         result.head must beAnInstanceOf[LessSuccess]
         sourceMap.exists() must beTrue
 
         // Check that the correct base path was used
         import DefaultJsonProtocol._
-        val map = JsonParser(IO.read(sourceMap)).asJsObject
+        val map = JsonParser(Source.fromFile(sourceMap).mkString).asJsObject
         map.fields("sources").convertTo[JsArray].elements.head must_== JsString("a.less")
 
         // Check that the correct base path was used in the file
@@ -124,8 +124,8 @@ class LessCompilerSpec extends Specification with NoTimeConversions {
 
     "support compression" in new TestActorSystem {
       withTmpDir { dir =>
-        val aless = resourceToFile("a.less", dir / "a.less")
-        val out = dir / "a.min.css"
+        val aless = resourceToFile("a.less")
+        val out = new File(dir, "a.min.css")
         val result = compile(dir, LessOptions(compress = true, sourceMap = false), aless -> out)
         result.head must beAnInstanceOf[LessSuccess]
 
@@ -135,22 +135,22 @@ class LessCompilerSpec extends Specification with NoTimeConversions {
 
     "support compiling multiple files" in new TestActorSystem {
       withTmpDir { dir =>
-        val aless = resourceToFile("a.less", dir / "a.less")
-        val acss = dir / "a.css"
-        val bless = resourceToFile("b.less", dir / "b.less")
-        val bcss = dir / "b.css"
+        val aless = resourceToFile("a.less")
+        val acss = new File(dir, "a.css")
+        val bless = resourceToFile("b.less")
+        val bcss = new File(dir, "b.css")
         val result = compile(dir, LessOptions(compress = true), aless -> acss, bless -> bcss)
 
         result must haveSize(2)
         result.find(_.inputFile == aless.getAbsolutePath) must beSome.like {
           case s: LessSuccess =>
             acss.exists() must beTrue
-            IO.read(acss) must contain("h1")
+            Source.fromFile(acss).mkString must contain("h1")
         }
         result.find(_.inputFile == bless.getAbsolutePath) must beSome.like {
           case s: LessSuccess =>
             bcss.exists() must beTrue
-            IO.read(bcss) must contain("h2")
+            Source.fromFile(bcss).mkString must contain("h2")
         }
 
       }
@@ -158,13 +158,11 @@ class LessCompilerSpec extends Specification with NoTimeConversions {
 
     "support importing files from other paths" in new TestActorSystem {
       withTmpDir { dir =>
-        val includePath = dir / "includes"
-        val aless = resourceToFile("a.less", includePath / "a.less")
-        val mainPath = dir / "main"
-        val importless = resourceToFile("import.less", mainPath / "import.less")
-        val css = dir / "out" / "import.css"
+        val aless = resourceToFile("a.less")
+        val importless = resourceToFile("import.less")
+        val css = new File(dir, "out" + File.separator + "import.css")
 
-        val result = compile(dir, LessOptions(includePaths = Seq(includePath)), importless -> css)
+        val result = compile(dir, LessOptions(includePaths = Seq(dir)), importless -> css)
 
         result.headOption must beSome.like {
           case LessSuccess(file, depends) =>
@@ -177,21 +175,6 @@ class LessCompilerSpec extends Specification with NoTimeConversions {
 
   }
 
-  def withTmpDir[T](block: File => T) = {
-    val dir = createTmpDir()
-    try {
-      block(dir)
-    } finally {
-      def delete(file: File): Unit = file match {
-        case dir if dir.isDirectory =>
-          dir.listFiles().foreach(delete)
-          dir.delete()
-        case file => file.delete()
-      }
-      delete(dir)
-    }
-  }
-
   def createTmpDir() = {
     val dir = File.createTempFile("less-compiler-spec", "")
     dir.delete()
@@ -199,14 +182,26 @@ class LessCompilerSpec extends Specification with NoTimeConversions {
     dir
   }
 
-  def createCompiler(dir: File)(implicit system: ActorSystem) = {
+  def withTmpDir[T](block: File => T) = {
+    val dir = createTmpDir()
+    try {
+      block(dir)
+    } finally {
+      def delete(file: File): Unit = file match {
+        case d if d.isDirectory =>
+          dir.listFiles().foreach(delete)
+          dir.delete()
+        case f => f.delete()
+      }
+      delete(dir)
+    }
+  }
+
+  def createCompiler(dir: File)(implicit system: ActorSystem): LessCompiler = {
     val extractor = new WebJarExtractor(this.getClass.getClassLoader)
-    extractor.extractWebJarTo("less", dir)
-    extractor.extractWebJarTo("source-map", dir)
-    extractor.extractWebJarTo("amdefine", dir)
-    val lessc = resourceToFile("lessc.js", dir / "lessc.js")
-    val engine = system.actorOf(Trireme.props(), "engine")
-    new LessCompiler(engine, lessc.getAbsoluteFile, List((dir / "lib").getAbsolutePath))
+    extractor.extractAllNodeModulesTo(dir)
+    val engine = system.actorOf(Trireme.props(stdModulePaths = immutable.Seq(dir.getCanonicalPath)), "engine")
+    new LessCompiler(engine, resourceToFile("lessc.js"))
   }
 
   def compile(dir: File, options: LessOptions, files: (File, File)*)(implicit system: ActorSystem): Seq[LessResult] = {
@@ -220,14 +215,8 @@ class LessCompilerSpec extends Specification with NoTimeConversions {
     result.results
   }
 
-  def resourceToFile(resource: String, to: File): File = {
-    val is = this.getClass.getClassLoader.getResourceAsStream(resource)
-    try {
-      IO.transfer(is, to)
-      to
-    } finally {
-      is.close()
-    }
+  def resourceToFile(name: String): File = {
+    new File(this.getClass.getClassLoader.getResource(name).toURI)
   }
 
 }
