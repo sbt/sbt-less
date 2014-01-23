@@ -7,7 +7,7 @@
         path = require("path");
 
     // Import less, expects it to be in the module path somewhere
-    var less = require("less/index");
+    var less = require("less");
 
     var mkdirp;
 

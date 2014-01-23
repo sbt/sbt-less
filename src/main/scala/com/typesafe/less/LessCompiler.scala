@@ -9,11 +9,10 @@ import scala.concurrent.{ExecutionContext, Future}
 import com.typesafe.jse.Engine
 import com.typesafe.jse.Engine.JsExecutionResult
 import scala.util.control.NonFatal
-import scala.collection.immutable
 
 /**
  * The less options.
- * 
+ *
  * @param silent Suppress output of error messages.
  * @param verbose Be verbose.
  * @param ieCompat Do IE compatibility checks.
@@ -130,10 +129,8 @@ object LessResult extends DefaultJsonProtocol {
  *
  * @param engine The Javascript engine
  * @param shellSource The path of the lessc source file
- * @param modulePaths The module paths to add.  This must at a minimum contain less on it, but should also contain
- *                    source-map and amdefine if source-map support is desired.
  */
-class LessCompiler(engine: ActorRef, shellSource: File, modulePaths: Seq[String]) {
+class LessCompiler(engine: ActorRef, shellSource: File) {
 
   /**
    * Compile the given files using the given options.
@@ -188,8 +185,8 @@ class LessCompiler(engine: ActorRef, shellSource: File, modulePaths: Seq[String]
         JsObject(jsOptions ++ sourceMapArgs ++ inputOutputArgs)
     }).toString()
     val args = List(options)
-    (engine ? Engine.ExecuteJs(shellSource, args, timeout = timeout.duration, modulePaths = modulePaths.to[immutable.Seq])).map {
-      case JsExecutionResult(exitValue, output, error) => {
+    (engine ? Engine.ExecuteJs(shellSource, args, timeout = timeout.duration)).map {
+      case JsExecutionResult(exitValue, output, error) =>
 
         val outputLines = new String(output.toArray).split("\n")
         val stderr = new String(error.toArray)
@@ -205,16 +202,12 @@ class LessCompiler(engine: ActorRef, shellSource: File, modulePaths: Seq[String]
           val stdout = if (outputLines.isEmpty) "" else outputLines.dropRight(1).mkString("\n")
           LessExecutionResult(results, stdout, stderr)
         } catch {
-          case NonFatal(_) => {
+          case NonFatal(_) =>
             val results = filesToCompile.map {
               case (in, _) => LessError(in.getAbsolutePath, Seq(LessCompileError(None, None, None, "Fatal error in less compiler")))
             }
             LessExecutionResult(results, new String(output.toArray), stderr)
-          }
         }
-
-
-      }
     }
   }
 }
