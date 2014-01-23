@@ -81,7 +81,7 @@ object LessPlugin extends sbt.Plugin {
 
     includePathGenerators := Nil,
     includePathGenerators <+= includePaths.map(identity),
-    includePathGenerators <+= extractWebJars.map(webjars => Seq(webjars)),
+    includePathGenerators <+= webJars.map(Seq(_)),
     allIncludePaths <<= Defaults.generate(includePathGenerators),
 
     lessOptionsIntermediate <<= (silent, verbose, ieCompat, compress, cleancss, allIncludePaths, sourceMap, sourceMapLessInline,
