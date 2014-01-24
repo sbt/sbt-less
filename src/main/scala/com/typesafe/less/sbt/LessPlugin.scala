@@ -10,10 +10,16 @@ import com.typesafe.jse.{Rhino, PhantomJs, Node, CommonNode, Trireme}
 import com.typesafe.jse.sbt.JsEnginePlugin.JsEngineKeys
 import com.typesafe.web.sbt.WebPlugin.WebKeys
 import xsbti.{CompileFailed, Severity, Problem}
-import com.typesafe.less.{LessCompiler, LessError, LessOptions, LessSuccess, LessCompileError}
+import com.typesafe.less.{LessCompiler, LessError, LessResult}
 import com.typesafe.web.sbt.{WebPlugin, GeneralProblem, LineBasedProblem}
 import akka.util.Timeout
 import scala.collection.immutable
+import com.typesafe.web.sbt.CompileProblems
+import com.typesafe.web.sbt.incremental
+import com.typesafe.web.sbt.incremental._
+import com.typesafe.less.LessCompileError
+import com.typesafe.less.LessOptions
+import com.typesafe.less.LessSuccess
 
 object LessPlugin extends sbt.Plugin {
 
@@ -26,7 +32,7 @@ object LessPlugin extends sbt.Plugin {
     // Internal
     val lesscSource = TaskKey[File]("lessc-source", "The extracted lessc source file.", CSetting)
     val lessOptions = TaskKey[LessOptions]("less-options", "The less options", CSetting)
-    val lessOptionsIntermediate = TaskKey[(Int, Boolean, Boolean, Boolean, Int, Boolean, Boolean, Boolean) => LessOptions]("less-options-intermediate")
+    val partialLessOptions = TaskKey[(Int, Boolean, Boolean, Boolean, Int, Boolean, Boolean, Boolean) => LessOptions]("less-options-partial")
 
     // Less options
     val silent = SettingKey[Boolean]("less-silent", "Suppress output of error messages.", ASetting)
@@ -84,13 +90,18 @@ object LessPlugin extends sbt.Plugin {
     includePathGenerators <+= webJars.map(Seq(_)),
     allIncludePaths <<= Defaults.generate(includePathGenerators),
 
-    lessOptionsIntermediate <<= (silent, verbose, ieCompat, compress, cleancss, allIncludePaths, sourceMap, sourceMapLessInline,
-      sourceMapFileInline, sourceMapRootpath, rootpath).map { (s, v, ie, co, cl, ip, sm, sl, sf, sr, r) =>
-      LessOptions(s, v, ie, co, cl, ip, sm, sl, sf, sr, r, _, _, _, _, _, _, _, _)
+    // Using a partial here given that we need to work around param # limitations.
+    partialLessOptions <<= (silent, verbose, ieCompat, compress, cleancss, allIncludePaths, sourceMap, sourceMapLessInline,
+      sourceMapFileInline, sourceMapRootpath, rootpath).map {
+      (s, v, ie, co, cl, ip, sm, sl, sf, sr, r) =>
+        LessOptions(s, v, ie, co, cl, ip, sm, sl, sf, sr, r, _, _, _, _, _, _, _, _)
     },
 
-    lessOptions <<= (lessOptionsIntermediate, maxLineLen, strictMath, strictUnits, strictImports, optimization, color,
-      insecure, relativeUrls).map((loi, mll, sm, su, si, o, c, i, rl) => loi(mll, sm, su, si, o, c, i, rl)),
+    lessOptions <<= (partialLessOptions, maxLineLen, strictMath, strictUnits, strictImports, optimization, color,
+      insecure, relativeUrls).map {
+      (partialLessOptions, mll, sm, su, si, o, c, i, rl) =>
+        partialLessOptions(mll, sm, su, si, o, c, i, rl)
+    },
 
     lessSources <<= sourceDirectory(base => (base ** "*.less") --- base ** "_*")
 
@@ -123,17 +134,17 @@ object LessPlugin extends sbt.Plugin {
    * The less compiler task
    */
   def lessCompiler(state: State,
-               lessc: File,
-               nodeModules: File,
-               sourceFolders: Seq[File],
-               lessSources: PathFinder,
-               outputDir: File,
-               lessOptions: LessOptions,
-               engineType: EngineType.Value,
-               s: TaskStreams,
-               reporter: LoggerReporter,
-               parallelism: Int
-                ): Seq[File] = {
+                   lessc: File,
+                   nodeModules: File,
+                   sourceFolders: Seq[File],
+                   lessSources: PathFinder,
+                   outputDir: File,
+                   lessOptions: LessOptions,
+                   engineType: EngineType.Value,
+                   s: TaskStreams,
+                   reporter: LoggerReporter,
+                   parallelism: Int
+                    ): Seq[File] = {
 
     import com.typesafe.web.sbt.WebPlugin._
 
@@ -158,55 +169,66 @@ object LessPlugin extends sbt.Plugin {
         file -> out
     }
 
-    // Filter files from cache here
+    implicit val opInputHasher =
+      OpInputHasher[(File, File)](sourceMapping => OpInputHash.hashString(sourceMapping + "|" + lessOptions))
 
-    s.log.info(s"Compiling ${files.size} less files")
+    val problems: Seq[Problem] = incremental.runIncremental(s.cacheDirectory, files) {
+      modifiedFiles: Seq[(File, File)] =>
 
-    val fileBatches = (files grouped Math.max(files.size / parallelism, 1)).toSeq
-    val pendingResultBatches: Seq[Future[Seq[(File, LessCompileError)]]] = fileBatches.map { sourceBatch =>
-      implicit val timeout = Timeout(timeoutPerSource * sourceBatch.size)
-      withActorRefFactory(state, this.getClass.getName) { arf =>
-        val engine = arf.actorOf(engineProps)
-        val compiler = new LessCompiler(engine, lessc)
-        compiler.compile(files, lessOptions).map { result =>
-          if (!result.stdout.isEmpty) s.log.info(result.stdout)
-          if (!result.stderr.isEmpty) s.log.error(result.stderr)
+        if (modifiedFiles.size > 0) {
+          s.log.info(s"Compiling ${modifiedFiles.size} less files")
 
-          result.results.foldLeft[Seq[(File, LessCompileError)]](Nil) {
-            case (compileProbs, LessSuccess(file, deps)) =>
-              // Handle caching here
-              compileProbs
-            case (compileProbs, LessError(file, errors)) =>
-              val f = new File(file)
-              compileProbs ++ errors.map(f -> _)
+          val fileBatches = (modifiedFiles grouped Math.max(modifiedFiles.size / parallelism, 1)).toSeq
+          val pendingResultBatches: Seq[Future[Seq[LessResult]]] = fileBatches.map {
+            sourceBatch =>
+              implicit val timeout = Timeout(timeoutPerSource * sourceBatch.size)
+              withActorRefFactory(state, this.getClass.getName) {
+                arf =>
+                  val engine = arf.actorOf(engineProps)
+                  val compiler = new LessCompiler(engine, lessc)
+                  compiler.compile(sourceBatch, lessOptions).map {
+                    result =>
+                      if (!result.stdout.isEmpty) s.log.info(result.stdout)
+                      if (!result.stderr.isEmpty) s.log.error(result.stderr)
+                      result.results
+                  }
+              }
           }
+
+          val allLessResults = Await.result(Future.sequence(pendingResultBatches), timeoutPerSource * modifiedFiles.size).flatten
+
+          val results: Map[(File, File), OpResult] = allLessResults.map {
+            entry =>
+              val result = entry match {
+                case LessSuccess(input, output, dependsOn) =>
+                  OpSuccess(dependsOn + input, Set(output))
+                case _ => OpFailure
+              }
+              (entry.input -> entry.output) -> result
+          }.toMap
+
+          def lineContent(file: File, line: Int) = IO.readLines(file).drop(line - 2).headOption
+
+          val problems = allLessResults.map {
+            case e: LessError =>
+              e.compileErrors.map {
+                case LessCompileError(Some(input), Some(line), Some(column), message) =>
+                  new LineBasedProblem(message, Severity.Error, line, column - 1, lineContent(input, line).getOrElse(""), input)
+
+                case LessCompileError(Some(input), _, _, message) =>
+                  new GeneralProblem(message, input)
+              }
+            case _ => Nil
+          }.flatten.distinct
+
+          (results, problems)
+
+        } else {
+          (Map.empty, Seq.empty)
         }
-      }
     }
 
-    val compileErrors = Await.result(Future.sequence(pendingResultBatches), timeoutPerSource * files.size).flatten
-
-    def lineContent(file: File, line: Int) = {
-      IO.readLines(file).drop(line - 2).headOption
-    }
-
-    // Use distinct problems, because multiple entry points could have encountered the same compile error for the
-    // same file
-    val problems = compileErrors.distinct.map {
-      case (_, LessCompileError(Some(f), Some(line), Some(column), message)) =>
-        val file = new File(f)
-        new LineBasedProblem(message, Severity.Error, line, column - 1, lineContent(file, line).getOrElse(""), file)
-
-      case (file, LessCompileError(_, _, _, message)) => new GeneralProblem(message, file)
-    }
-
-    reporter.reset()
-    problems.filter(_.severity() == Severity.Error).foreach(p => reporter.log(p.position, p.message, p.severity))
-    reporter.printSummary()
-
-    if (problems.exists(_.severity() == Severity.Error)) {
-      throw new LessCompilationFailedException(problems.toArray)
-    }
+    CompileProblems.report(reporter, problems)
 
     files.map(_._2)
   }
@@ -217,4 +239,5 @@ object LessPlugin extends sbt.Plugin {
 
     override val arguments: Array[String] = Array.empty
   }
+
 }

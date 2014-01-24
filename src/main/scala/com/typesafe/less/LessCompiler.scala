@@ -34,77 +34,72 @@ import scala.util.control.NonFatal
  * @param relativeUrls Re-write relative urls to the base less file.
  */
 case class LessOptions(
-  silent: Boolean = false,
-  verbose: Boolean = false,
-  ieCompat: Boolean = true,
-  compress: Boolean = false,
-  cleancss: Boolean = false,
-  includePaths: Seq[File] = Seq(),
-  sourceMap: Boolean = true,
-  sourceMapLessInline: Boolean = false,
-  sourceMapFileInline: Boolean = false,
-  sourceMapRootpath: Option[String] = None,
-  rootpath: Option[String] = None,
-  maxLineLen: Int = -1,
-  strictMath: Boolean = false,
-  strictUnits: Boolean = false,
-  strictImports: Boolean = false,
-  optimization: Int = 1,
-  color: Boolean = true,
-  insecure: Boolean = false,
-  relativeUrls: Boolean = false
-)
+                        silent: Boolean = false,
+                        verbose: Boolean = false,
+                        ieCompat: Boolean = true,
+                        compress: Boolean = false,
+                        cleancss: Boolean = false,
+                        includePaths: Seq[File] = Seq(),
+                        sourceMap: Boolean = true,
+                        sourceMapLessInline: Boolean = false,
+                        sourceMapFileInline: Boolean = false,
+                        sourceMapRootpath: Option[String] = None,
+                        rootpath: Option[String] = None,
+                        maxLineLen: Int = -1,
+                        strictMath: Boolean = false,
+                        strictUnits: Boolean = false,
+                        strictImports: Boolean = false,
+                        optimization: Int = 1,
+                        color: Boolean = true,
+                        insecure: Boolean = false,
+                        relativeUrls: Boolean = false
+                        )
 
 /** The result of compiling a less file. */
 sealed trait LessResult {
 
-  /** The input file that was compiled. */
-  def inputFile: String
+  def input: File
+
+  def output: File
 }
 
 /**
  * A successful less compilation.
- *
- * @param inputFile The file that was compiled.
- * @param dependsOn The files this file depends on.
  */
-case class LessSuccess(inputFile: String, dependsOn: Set[String]) extends LessResult
+case class LessSuccess(input: File, output: File, dependsOn: Set[File]) extends LessResult
 
 /**
  * A compile error.
- *
- * @param filename The file that was being compiled - may be an imported file.
- * @param line The line number the compilation error happened on.
- * @param column The column that the compilation error occurred at.
- * @param message The error message.
  */
-case class LessCompileError(filename: Option[String], line: Option[Int], column: Option[Int], message: String)
+case class LessCompileError(filename: Option[File], line: Option[Int], column: Option[Int], message: String)
 
 /**
  * An erroneous less compilation.
- *
- * @param inputFile The file that was attempted to be compiled.
- * @param compileErrors The list of compile errors.
  */
-case class LessError(inputFile: String, compileErrors: Seq[LessCompileError]) extends LessResult
+case class LessError(input: File, output: File, compileErrors: Seq[LessCompileError]) extends LessResult
 
 /**
  * The result of compiling many less files.
- *
- * @param results The list of results.
- * @param stdout Everything that was logged to standard out.
- * @param stderr Everything that was logged to standard in.
  */
 case class LessExecutionResult(results: Seq[LessResult], stdout: String, stderr: String)
 
 /**
  * JSON protocol for the LESS result deserialisation.
  */
-object LessResult extends DefaultJsonProtocol {
+object LessResultProtocol extends DefaultJsonProtocol {
 
-  implicit val lessSuccess: RootJsonFormat[LessSuccess] = jsonFormat2(LessSuccess.apply)
+  implicit object FileFormat extends RootJsonFormat[File] {
+    def write(f: File) = JsString(f.getCanonicalPath)
+
+    def read(value: JsValue) = value match {
+      case s: JsString => new File(s.convertTo[String])
+      case _ => deserializationError("String expected")
+    }
+  }
+
+  implicit val lessSuccess: RootJsonFormat[LessSuccess] = jsonFormat3(LessSuccess.apply)
   implicit val lessCompileError = jsonFormat4(LessCompileError.apply)
-  implicit val lessError = jsonFormat2(LessError.apply)
+  implicit val lessError = jsonFormat3(LessError.apply)
 
   implicit val lessResult = new JsonFormat[LessResult] {
     def read(json: JsValue) = json.asJsObject.fields.get("status") match {
@@ -113,7 +108,7 @@ object LessResult extends DefaultJsonProtocol {
       case _ => throw new IllegalArgumentException("Unable to extract less result from JSON")
     }
 
-    def writeStatus[C](status: String, c: C)(implicit format : JsonFormat[C]) = {
+    def writeStatus[C](status: String, c: C)(implicit format: JsonFormat[C]) = {
       JsObject(format.write(c).asJsObject.fields + ("status" -> JsString(status)))
     }
 
@@ -122,6 +117,7 @@ object LessResult extends DefaultJsonProtocol {
       case error: LessError => writeStatus("failure", error)
     }
   }
+
 }
 
 /**
@@ -188,23 +184,28 @@ class LessCompiler(engine: ActorRef, shellSource: File) {
     (engine ? Engine.ExecuteJs(shellSource, args, timeout = timeout.duration)).map {
       case JsExecutionResult(exitValue, output, error) =>
 
-        val outputLines = new String(output.toArray).split("\n")
-        val stderr = new String(error.toArray)
+        val stdout = new String(output.toArray, "UTF-8")
+        val stderr = new String(error.toArray, "UTF-8")
 
         // Last line of the results should be the status
+        val outputLines = stdout.split("\n")
         val status = outputLines.lastOption.getOrElse("{}")
 
         // Try and parse
         try {
-          import DefaultJsonProtocol._
+          import LessResultProtocol._
           val results = JsonParser(status).convertTo[Seq[LessResult]]
           // Don't include the status line (ie the last line) in stdout, we exclude it by doing dropRight(1).
-          val stdout = if (outputLines.isEmpty) "" else outputLines.dropRight(1).mkString("\n")
-          LessExecutionResult(results, stdout, stderr)
+          def trimmed(out: Array[String]): String = if (out.isEmpty) "" else out.dropRight(1).mkString("\n")
+          LessExecutionResult(results, trimmed(outputLines), stderr)
         } catch {
-          case NonFatal(_) =>
+          case NonFatal(e) =>
             val results = filesToCompile.map {
-              case (in, _) => LessError(in.getAbsolutePath, Seq(LessCompileError(None, None, None, "Fatal error in less compiler")))
+              case (in, out) => LessError(
+                in,
+                out,
+                Seq(LessCompileError(None, None, None, s"Fatal error in less compiler: ${e.getMessage}"))
+              )
             }
             LessExecutionResult(results, new String(output.toArray), stderr)
         }

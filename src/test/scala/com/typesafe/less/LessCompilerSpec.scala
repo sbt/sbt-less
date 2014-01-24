@@ -30,8 +30,9 @@ class LessCompilerSpec extends Specification with NoTimeConversions {
         val acss = new File(dir, "a.css")
         val result = compile(dir, LessOptions(), aless -> acss)
         result.headOption must beSome.like {
-          case LessSuccess(file, depends) =>
-            file must_== aless.getAbsolutePath
+          case LessSuccess(inputFile, outputFile, depends) =>
+            inputFile must_== aless
+            outputFile must_== acss
             depends must beEmpty
         }
         acss.exists() must beTrue
@@ -43,10 +44,10 @@ class LessCompilerSpec extends Specification with NoTimeConversions {
         val badless = resourceToFile("bad.less")
         val result = compile(dir, LessOptions(), badless -> new File(dir, "bad.css"))
         result.headOption must beSome.like {
-          case LessError(file, errors) =>
-            file must_== badless.getAbsolutePath
+          case LessError(inputFile, outputFile, errors) =>
+            inputFile must_== badless
             val err = errors.head
-            err.filename must beSome(badless.getAbsolutePath)
+            err.filename must beSome(badless)
             err.line must beSome(4)
             err.column must beSome(2)
         }
@@ -58,8 +59,8 @@ class LessCompilerSpec extends Specification with NoTimeConversions {
         val missingless = new File(dir, "missing.less")
         val result = compile(dir, LessOptions(), missingless -> new File(dir, "missing.css"))
         result.headOption must beSome.like {
-          case LessError(file, errors) =>
-            file must_== missingless.getAbsolutePath
+          case LessError(inputFile, outputFile, errors) =>
+            inputFile must_== missingless
             val err = errors.head
             err.message must_== "File not found"
         }
@@ -71,10 +72,10 @@ class LessCompilerSpec extends Specification with NoTimeConversions {
         val badrender = resourceToFile("badrender.less")
         val result = compile(dir, LessOptions(), badrender -> new File(dir, "badrender.css"))
         result.headOption must beSome.like {
-          case LessError(file, errors) =>
-            file must_== badrender.getAbsolutePath
+          case LessError(inputFile, outputFile, errors) =>
+            inputFile must_== badrender
             val err = errors.head
-            err.filename must beSome(badrender.getAbsolutePath)
+            err.filename must beSome(badrender)
             err.line must beSome(2)
             err.column must beSome(9)
         }
@@ -88,9 +89,9 @@ class LessCompilerSpec extends Specification with NoTimeConversions {
         val css = new File(dir, "import.css")
         val result = compile(dir, LessOptions(), importless -> css)
         result.headOption must beSome.like {
-          case LessSuccess(file, depends) =>
-            file must_== importless.getAbsolutePath
-            depends must containTheSameElementsAs(Seq(aless.getAbsolutePath))
+          case LessSuccess(inputFile, outputFile, depends) =>
+            inputFile must_== importless
+            depends must containTheSameElementsAs(Seq(aless))
         }
         css.exists() must beTrue
       }      
@@ -142,12 +143,12 @@ class LessCompilerSpec extends Specification with NoTimeConversions {
         val result = compile(dir, LessOptions(compress = true), aless -> acss, bless -> bcss)
 
         result must haveSize(2)
-        result.find(_.inputFile == aless.getAbsolutePath) must beSome.like {
+        result.find(_.input == aless) must beSome.like {
           case s: LessSuccess =>
             acss.exists() must beTrue
             Source.fromFile(acss).mkString must contain("h1")
         }
-        result.find(_.inputFile == bless.getAbsolutePath) must beSome.like {
+        result.find(_.input == bless) must beSome.like {
           case s: LessSuccess =>
             bcss.exists() must beTrue
             Source.fromFile(bcss).mkString must contain("h2")
@@ -165,9 +166,9 @@ class LessCompilerSpec extends Specification with NoTimeConversions {
         val result = compile(dir, LessOptions(includePaths = Seq(dir)), importless -> css)
 
         result.headOption must beSome.like {
-          case LessSuccess(file, depends) =>
-            file must_== importless.getAbsolutePath
-            depends must containTheSameElementsAs(Seq(aless.getAbsolutePath))
+          case LessSuccess(inputFile, outputFile, depends) =>
+            inputFile must_== importless
+            depends must containTheSameElementsAs(Seq(aless))
         }
         css.exists() must beTrue
       }
@@ -189,8 +190,8 @@ class LessCompilerSpec extends Specification with NoTimeConversions {
     } finally {
       def delete(file: File): Unit = file match {
         case d if d.isDirectory =>
-          dir.listFiles().foreach(delete)
-          dir.delete()
+          d.listFiles().foreach(delete)
+          d.delete()
         case f => f.delete()
       }
       delete(dir)

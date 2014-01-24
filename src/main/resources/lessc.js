@@ -42,8 +42,8 @@
     };
 
     // Called when an error is encountered
-    var reportError = function (input, err) {
-        finishParsing({status: "failure", inputFile: input, compileErrors: [err]});
+    var reportError = function (input, output, err) {
+        finishParsing({status: "failure", input: input, output: output, compileErrors: [err]});
     };
 
     var doJob = function (options) {
@@ -66,7 +66,7 @@
         var parseLessFile = function (e, data) {
 
             if (e) {
-                reportError(input, {message: "File not found"});
+                reportError(input, output, {message: "File not found"});
                 return;
             }
 
@@ -78,7 +78,7 @@
             var parser = new (less.Parser)(options);
             parser.parse(data, function (err, tree) {
                 if (err) {
-                    reportError(input, err);
+                    reportError(input, output, err);
                 } else {
                     try {
                         var css = tree.toCSS({
@@ -113,9 +113,9 @@
                             }
                         }
 
-                        finishParsing({status: "success", inputFile: input, dependsOn: imports});
+                        finishParsing({status: "success", input: input, output: output, dependsOn: imports});
                     } catch (e) {
-                        reportError(input, e);
+                        reportError(input, output, e);
                     }
                 }
             });
