@@ -233,11 +233,4 @@ object LessPlugin extends sbt.Plugin {
     files.map(_._2)
   }
 
-  class LessCompilationFailedException(override val problems: Array[Problem])
-    extends CompileFailed
-    with FeedbackProvidedException {
-
-    override val arguments: Array[String] = Array.empty
-  }
-
 }
