@@ -27,7 +27,8 @@ object LessPlugin extends sbt.Plugin {
     // Less command
     val less = TaskKey[Seq[File]]("less", "Invoke the less compiler.")
 
-    val lessSources = SettingKey[PathFinder]("less-sources", "The list of less sources.", ASetting)
+    val lessFilter = SettingKey[FileFilter]("less-filter", "The filter for less files.")
+    val lessSources = TaskKey[PathFinder]("less-sources", "The list of less sources.", ASetting)
 
     // Internal
     val lesscSource = TaskKey[File]("lessc-source", "The extracted lessc source file.", CSetting)
@@ -103,7 +104,7 @@ object LessPlugin extends sbt.Plugin {
         partialLessOptions(mll, sm, su, si, o, c, i, rl)
     },
 
-    lessSources <<= sourceDirectory(base => (base ** "*.less") --- base ** "_*")
+    lessSources := (unmanagedSources.value ** lessFilter.value).get
 
   )
 
@@ -116,6 +117,9 @@ object LessPlugin extends sbt.Plugin {
           LessPlugin.getClass.getClassLoader
         )
     },
+
+    lessFilter in Assets := GlobFilter("*.less"),
+    lessFilter in TestAssets := (lessFilter in Assets).value,
 
     less in Assets <<= lessTask(Assets),
     less in TestAssets <<= lessTask(TestAssets),

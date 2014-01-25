@@ -25,10 +25,6 @@ Then declare the settings required in your build file (LessPlugin depends on som
 
     LessPlugin.lessSettings
 
-By default, any `*.less` files that don't start with underscore. in `src/main/assets` and `src/test/assets` will be compiled.  Specific files can be compiled instead, for example:
-
-    lessSources in Assets <<= (sourceDirectory in Assets)(base => base / "main.less")
-
 The compiler allows most of the same options to be specified as the less compiler itself.  A complete list of options are:
 
 * *silent*: Suppress output of error messages. Defaults to false.
