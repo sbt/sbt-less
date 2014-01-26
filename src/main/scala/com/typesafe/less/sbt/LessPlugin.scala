@@ -125,8 +125,8 @@ object LessPlugin extends sbt.Plugin {
     less in TestAssets <<= lessTask(TestAssets),
     less <<= less in Assets,
 
-    resourceGenerators in Compile <+= (less in Assets),
-    resourceGenerators in Test <+= (less in TestAssets)
+    compile in Compile <<= (compile in Compile).dependsOn(less in Assets),
+    test in Test <<= (test in Test).dependsOn(less in Assets, less in TestAssets)
 
   ) ++ inConfig(Assets)(unscopedSettings) ++ inConfig(TestAssets)(unscopedSettings)
 
@@ -162,6 +162,8 @@ object LessPlugin extends sbt.Plugin {
       case EngineType.Trireme => Trireme.props(stdModulePaths = immutable.Seq(nodeModules.getCanonicalPath))
 
     }
+
+    outputDir.mkdirs()
 
     val files = (lessSources.get x relativeTo(sourceFolders)).map {
       case (file, relative) =>
