@@ -4,7 +4,7 @@ organization := "com.typesafe"
 
 name := "sbt-less-plugin"
 
-version := "1.0.0-SNAPSHOT"
+version := "1.0.0-M1"
 
 scalaVersion := "2.10.3"
 
@@ -18,12 +18,13 @@ libraryDependencies ++= Seq(
 )
 
 resolvers ++= Seq(
+  "Typesafe Releases Repository" at "http://repo.typesafe.com/typesafe/releases/",
   Resolver.url("sbt snapshot plugins", url("http://repo.scala-sbt.org/scalasbt/sbt-plugin-snapshots"))(Resolver.ivyStylePatterns),
   Resolver.sonatypeRepo("snapshots"),
   "Typesafe Snapshots Repository" at "http://repo.typesafe.com/typesafe/snapshots/"
 )
 
-addSbtPlugin("com.typesafe" %% "sbt-js-engine" % "1.0.0-SNAPSHOT")
+addSbtPlugin("com.typesafe" %% "sbt-js-engine" % "1.0.0-M1")
 
 scriptedSettings
 
