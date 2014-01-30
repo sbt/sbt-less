@@ -1,4 +1,4 @@
-less-sbt-plugin
+sbt-less-plugin
 ===============
 
 Allows less to be used from within sbt. Builds on com.typesafe:js-engine in order to execute the less compiler along with the scripts to verify. js-engine enables high performance linting given parallelism and native JS engine execution.
