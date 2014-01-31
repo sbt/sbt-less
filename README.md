@@ -5,13 +5,7 @@ Allows less to be used from within sbt. Builds on com.typesafe:js-engine in orde
 
 To use this plugin use the addSbtPlugin command within your project's plugins.sbt (or as a global setting) i.e.:
 
-    resolvers ++= Seq(
-        Resolver.url("sbt snapshot plugins", url("http://repo.scala-sbt.org/scalasbt/sbt-plugin-snapshots"))(Resolver.ivyStylePatterns),
-        Resolver.sonatypeRepo("snapshots"),
-        "Typesafe Snapshots Repository" at "http://repo.typesafe.com/typesafe/snapshots/"
-        )
-
-    addSbtPlugin("com.typesafe" % "sbt-less-plugin" % "1.0.0-SNAPSHOT")
+    addSbtPlugin("com.typesafe" % "sbt-less-plugin" % "1.0.0-M1")
 
 Then declare the settings required in your build file (LessPlugin depends on some other, more generalised settings to be defined). For example, for build.sbt:
 
