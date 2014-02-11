@@ -1,4 +1,4 @@
-package com.typesafe.less.sbt
+package com.typesafe.sbt.less
 
 import sbt.Keys._
 import sbt._
@@ -7,21 +7,21 @@ import scala.concurrent.{Future, Await}
 import scala.concurrent.ExecutionContext.Implicits._
 import scala.concurrent.duration._
 import com.typesafe.jse.{Rhino, PhantomJs, Node, CommonNode, Trireme}
-import com.typesafe.jse.sbt.JsEnginePlugin.JsEngineKeys
-import com.typesafe.web.sbt.WebPlugin.WebKeys
-import xsbti.{CompileFailed, Severity, Problem}
+import com.typesafe.sbt.jse.SbtJsEnginePlugin.JsEngineKeys
+import com.typesafe.sbt.web.SbtWebPlugin.WebKeys
+import xsbti.{Severity, Problem}
 import com.typesafe.less.{LessCompiler, LessError, LessResult}
-import com.typesafe.web.sbt.{WebPlugin, GeneralProblem, LineBasedProblem}
+import com.typesafe.sbt.web.{SbtWebPlugin, GeneralProblem, LineBasedProblem}
 import akka.util.Timeout
 import scala.collection.immutable
-import com.typesafe.web.sbt.CompileProblems
-import com.typesafe.web.sbt.incremental
-import com.typesafe.web.sbt.incremental._
+import com.typesafe.sbt.web.CompileProblems
+import com.typesafe.sbt.web.incremental
+import com.typesafe.sbt.web.incremental._
 import com.typesafe.less.LessCompileError
 import com.typesafe.less.LessOptions
 import com.typesafe.less.LessSuccess
 
-object LessPlugin extends sbt.Plugin {
+object SbtLessPlugin extends sbt.Plugin {
 
   object LessKeys {
     // Less command
@@ -111,10 +111,10 @@ object LessPlugin extends sbt.Plugin {
   def lessSettings = Seq(
     lesscSource in LocalRootProject <<= (target in LocalRootProject).map {
       target =>
-        WebPlugin.copyResourceTo(
+        SbtWebPlugin.copyResourceTo(
           target / "less-plugin",
           "lessc.js",
-          LessPlugin.getClass.getClassLoader
+          SbtLessPlugin.getClass.getClassLoader
         )
     },
 
@@ -150,7 +150,7 @@ object LessPlugin extends sbt.Plugin {
                    parallelism: Int
                     ): Seq[File] = {
 
-    import com.typesafe.web.sbt.WebPlugin._
+    import com.typesafe.sbt.web.SbtWebPlugin._
 
     val timeoutPerSource = 10.seconds
 
