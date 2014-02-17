@@ -6,7 +6,7 @@ import sbt.KeyRanks._
 import scala.concurrent.{Future, Await}
 import scala.concurrent.ExecutionContext.Implicits._
 import scala.concurrent.duration._
-import com.typesafe.jse.{Rhino, PhantomJs, Node, CommonNode, Trireme}
+import com.typesafe.jse._
 import com.typesafe.sbt.jse.SbtJsEnginePlugin.JsEngineKeys
 import com.typesafe.sbt.web.SbtWebPlugin.WebKeys
 import xsbti.{Severity, Problem}
@@ -18,6 +18,15 @@ import com.typesafe.sbt.web.CompileProblems
 import com.typesafe.sbt.web.incremental
 import com.typesafe.sbt.web.incremental._
 import com.typesafe.less.LessCompileError
+import com.typesafe.less.LessOptions
+import com.typesafe.less.LessSuccess
+import scala.Some
+import com.typesafe.jse.Node
+import sbt.Task
+import com.typesafe.less.LessError
+import com.typesafe.less.LessCompileError
+import com.typesafe.sbt.web.incremental.OpSuccess
+import sbt.Configuration
 import com.typesafe.less.LessOptions
 import com.typesafe.less.LessSuccess
 
@@ -155,12 +164,11 @@ object SbtLessPlugin extends sbt.Plugin {
     val timeoutPerSource = 10.seconds
 
     val engineProps = engineType match {
-      case EngineType.CommonNode => CommonNode.props()
-      case EngineType.Node => Node.props(stdModulePaths = immutable.Seq(nodeModules.getCanonicalPath))
+      case EngineType.CommonNode => CommonNode.props(stdEnvironment = NodeEngine.nodePathEnv(immutable.Seq(nodeModules.getCanonicalPath)))
+      case EngineType.Node => Node.props(stdEnvironment = NodeEngine.nodePathEnv(immutable.Seq(nodeModules.getCanonicalPath)))
       case EngineType.PhantomJs => PhantomJs.props()
       case EngineType.Rhino => Rhino.props()
-      case EngineType.Trireme => Trireme.props(stdModulePaths = immutable.Seq(nodeModules.getCanonicalPath))
-
+      case EngineType.Trireme => Trireme.props(stdEnvironment = NodeEngine.nodePathEnv(immutable.Seq(nodeModules.getCanonicalPath)))
     }
 
     outputDir.mkdirs()

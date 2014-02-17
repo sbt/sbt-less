@@ -12,7 +12,7 @@ import scala.concurrent.Await
 import scala.collection.immutable
 import akka.actor.ActorSystem
 import spray.json._
-import com.typesafe.jse.Trireme
+import com.typesafe.jse.{NodeEngine, Trireme}
 import scala.io.Source
 
 @RunWith(classOf[JUnitRunner])
@@ -201,7 +201,7 @@ class LessCompilerSpec extends Specification with NoTimeConversions {
   def createCompiler(dir: File)(implicit system: ActorSystem): LessCompiler = {
     val extractor = new WebJarExtractor(this.getClass.getClassLoader)
     extractor.extractAllNodeModulesTo(dir)
-    val engine = system.actorOf(Trireme.props(stdModulePaths = immutable.Seq(dir.getCanonicalPath)), "engine")
+    val engine = system.actorOf(Trireme.props(stdEnvironment = NodeEngine.nodePathEnv(immutable.Seq(dir.getCanonicalPath))), "engine")
     new LessCompiler(engine, resourceToFile("lessc.js"))
   }
 
