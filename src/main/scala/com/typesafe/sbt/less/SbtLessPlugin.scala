@@ -75,8 +75,6 @@ object SbtLessPlugin extends sbt.Plugin {
   private val defaults = LessOptions()
 
   private val unscopedSettings = Seq(
-    compile <<= compile.dependsOn(less),
-
     silent := defaults.silent,
     verbose := defaults.verbose,
     ieCompat := defaults.ieCompat,
@@ -134,7 +132,10 @@ object SbtLessPlugin extends sbt.Plugin {
 
     less in Assets <<= lessTask(Assets),
     less in TestAssets <<= lessTask(TestAssets),
-    less <<= less in Assets
+    less <<= less in Assets,
+
+    compile in Compile <<= (compile in Compile).dependsOn(less in Assets),
+    test in Test <<= (test in Test).dependsOn(less in Assets, less in TestAssets)
 
   ) ++ inConfig(Assets)(unscopedSettings) ++ inConfig(TestAssets)(unscopedSettings)
 
