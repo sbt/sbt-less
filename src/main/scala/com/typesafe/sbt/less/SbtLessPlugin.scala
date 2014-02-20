@@ -170,8 +170,6 @@ object SbtLessPlugin extends sbt.Plugin {
       case EngineType.Trireme => Trireme.props(stdEnvironment = NodeEngine.nodePathEnv(immutable.Seq(nodeModules.getCanonicalPath)))
     }
 
-    outputDir.mkdirs()
-
     val files = (lessSources.get x relativeTo(sourceFolders)).map {
       case (file, relative) =>
         // Drop the .less, and add either .css or .min.css
@@ -179,6 +177,8 @@ object SbtLessPlugin extends sbt.Plugin {
         val outName = relative.replaceAll("\\.less$", "") + extension
 
         val out = outputDir / outName
+        Option(out.getParentFile()).map(_.mkdirs())
+
         file -> out
     }
 
