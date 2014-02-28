@@ -12,6 +12,7 @@ libraryDependencies ++= Seq(
   "com.typesafe.akka" %% "akka-actor" % "2.2.3",
   "org.webjars" % "less-node" % "1.6.0-1",
   "org.webjars" % "source-map" % "0.1.31-2",
+  "org.webjars" % "mkdirp" % "0.3.5",
   "org.specs2" %% "specs2" % "2.2.2" % "test",
   "junit" % "junit" % "4.11" % "test",
   "com.typesafe.akka" %% "akka-testkit" % "2.2.3" % "test"

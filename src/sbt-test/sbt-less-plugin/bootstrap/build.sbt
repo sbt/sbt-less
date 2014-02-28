@@ -1,6 +1,8 @@
+import com.typesafe.sbt.jse.SbtJsTaskPlugin
+
 webSettings
 
-jsEngineSettings
+SbtJsTaskPlugin.jsEngineAndTaskSettings
 
 lessSettings
 
