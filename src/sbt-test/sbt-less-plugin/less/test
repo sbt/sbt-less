@@ -1,13 +1,16 @@
 # Compile a less file
 
-> resources
-$ exists target/public/a.css
-$ exists target/public/a.css.map
+> compile
+$ exists target/public/css/a.css
+$ exists target/public/css/a.css.map
 
 # Compile with compression
 
 > set LessKeys.compress in WebKeys.Assets := true
-> resources
-$ exists target/public/a.min.css
-$ exists target/public/a.min.css.map
+> compile
+-$ exists target/public/css/a.css
+-$ exists target/public/css/a.css.map
+$ exists target/public/css/a.min.css
+$ exists target/public/css/a.min.css.map
+> checkMapFileContents
 

@@ -2,128 +2,127 @@
 
 (function () {
 
+    "use strict";
+
     var args = process.argv,
         fs = require("fs"),
+        less = require("less"),
+        mkdirp = require("mkdirp"),
         path = require("path");
 
-    // Import less, expects it to be in the module path somewhere
-    var less = require("less");
+    var SOURCE_FILE_MAPPINGS_ARG = 2;
+    var TARGET_ARG = 3;
+    var OPTIONS_ARG = 4;
 
-    var mkdirp;
+    var sourceFileMappings = JSON.parse(args[SOURCE_FILE_MAPPINGS_ARG]);
+    var target = args[TARGET_ARG];
+    var options = JSON.parse(args[OPTIONS_ARG]);
 
-    var ensureDirectory = function (filepath) {
-        var dir = path.dirname(filepath),
-            cmd,
-            existsSync = fs.existsSync || path.existsSync;
-        if (!existsSync(dir)) {
-            if (mkdirp === undefined) {
-                try {
-                    mkdirp = require('mkdirp');
-                }
-                catch (e) {
-                    mkdirp = null;
-                }
-            }
-            cmd = mkdirp && mkdirp.sync || fs.mkdirSync;
-            cmd(dir);
-        }
-    };
-
-    var jobs = JSON.parse(args[2]);
+    var sourcesToProcess = sourceFileMappings.length;
     var results = [];
+    var problems = [];
 
-    // Called when less has finished parsing a file
-    var finishParsing = function (result) {
-        results.push(result);
-        if (jobs.length == results.length) {
-            // If all files are passed, write the results to standard out
-            console.log(JSON.stringify(results));
+    function parseDone() {
+        if (--sourcesToProcess === 0) {
+            console.log("\u0010" + JSON.stringify({results: results, problems: problems}));
         }
-    };
+    }
 
-    // Called when an error is encountered
-    var reportError = function (input, output, err) {
-        finishParsing({status: "failure", input: input, output: output, compileErrors: [err]});
-    };
+    function throwIfErr(e) {
+        if (e) throw e;
+    }
 
-    var doJob = function (options) {
-        var input = options.input;
-        if (options.verbose) {
-            console.log("Compiling " + input);
-        }
+    sourceFileMappings.forEach(function (sourceFileMapping) {
 
-        var output = options.output;
+        var input = sourceFileMapping[0];
+        var outputFile = sourceFileMapping[1].replace(".less", options.compress ? ".min.css" : ".css");
+        var output = path.join(target, outputFile);
+        var sourceMapOutput = output + ".map";
 
-        if (!options.sourceMapFileInline) {
-            var writeSourceMap = function (output) {
-                var filename = options.sourceMapFilename;
-                ensureDirectory(filename);
-                fs.writeFileSync(filename, output, 'utf8');
+        fs.readFile(input, "utf8", function (e, contents) {
+            throwIfErr(e);
+
+            var writeSourceMap = function (content) {
+                mkdirp(path.dirname(sourceMapOutput), function (e) {
+                    throwIfErr(e);
+                    fs.writeFile(sourceMapOutput, content, "utf8", throwIfErr);
+                });
             };
-        }
 
-        // Most of this is adapted from the less bin/less script
-        var parseLessFile = function (e, data) {
+            var contentWithVars = (options.globalVariables ? options.globalVariables + "\n" : "") +
+                contents +
+                (options.modifyVariables ? "\n" + options.modifyVariables : "");
 
-            if (e) {
-                reportError(input, output, {message: "File not found"});
-                return;
-            }
-
-            data = options.globalVariables + data + options.modifyVariables;
-
-            options.paths = [path.dirname(input)].concat(options.paths);
-            options.filename = input;
-
+            options.filename = input; // Yuk, but I can't be bothered copying as there is no easy way in JS.
             var parser = new (less.Parser)(options);
-            parser.parse(data, function (err, tree) {
-                if (err) {
-                    reportError(input, output, err);
+            parser.parse(contentWithVars, function (e, tree) {
+                if (e) {
+                    problems.push({
+                        message: e.message,
+                        severity: "error",
+                        lineNumber: e.line,
+                        characterOffset: e.column,
+                        lineContent: contentWithVars.split("\n")[e.line],
+                        source: input
+                    });
+                    results.push({
+                        source: input,
+                        result: null
+                    });
+
+                    parseDone();
+
                 } else {
-                    try {
-                        var css = tree.toCSS({
-                            silent: options.silent,
-                            verbose: options.verbose,
-                            ieCompat: options.ieCompat,
-                            compress: options.compress,
-                            cleancss: options.cleancss,
-                            sourceMap: options.sourceMap,
-                            sourceMapFilename: options.sourceMapFilename,
-                            sourceMapURL: options.sourceMapURL,
-                            sourceMapOutputFilename: options.sourceMapOutputFilename,
-                            sourceMapBasepath: options.sourceMapBasepath,
-                            sourceMapRootpath: options.sourceMapRootpath || "",
-                            outputSourceFiles: options.outputSourceFiles,
-                            writeSourceMap: writeSourceMap,
-                            maxLineLen: options.maxLineLen,
-                            strictMath: options.strictMath,
-                            strictUnits: options.strictUnits
-                        });
-                        ensureDirectory(output);
-                        fs.writeFile(output, css, 'utf8');
-                        if (options.verbose) {
-                            console.log("Wrote " + output);
-                        }
 
-                        var imports = [];
-                        var files = parser.imports.files;
-                        for (var file in files) {
-                            if (files.hasOwnProperty(file)) {
-                                imports.push(file);
+                    var css = tree.toCSS({
+                        cleancss: options.cleancss,
+                        cleancssOptions: options.cleancssOptions || {},
+                        compress: options.compress,
+                        ieCompat: options.ieCompat || true,
+                        maxLineLen: options.maxLineLen,
+                        outputSourceFiles: options.outputSourceFiles,
+                        relativeUrls: options.relativeUrls,
+                        rootpath: options.rootPath || "",
+                        silent: options.silent,
+                        sourceMap: options.sourceMap,
+                        sourceMapBasepath: sourceFileMapping[0]
+                            .substring(0, sourceFileMapping[0].length - sourceFileMapping[1].length),
+                        sourceMapFilename: path.basename(sourceMapOutput),
+                        sourceMapOutputFilename: path.basename(outputFile),
+                        strictMath: options.strictMath,
+                        strictUnits: options.strictUnits,
+                        urlArgs: options.urlArgs || "",
+                        verbose: options.verbose,
+                        writeSourceMap: writeSourceMap
+                    });
+
+                    mkdirp(path.dirname(output), function (e) {
+                        throwIfErr(e);
+
+                        fs.writeFile(output, css, "utf8", function (e) {
+                            throwIfErr(e);
+
+                            var imports = [];
+                            var files = parser.imports.files;
+                            for (var file in files) {
+                                if (files.hasOwnProperty(file)) {
+                                    imports.push(file);
+                                }
                             }
-                        }
 
-                        finishParsing({status: "success", input: input, output: output, dependsOn: imports});
-                    } catch (e) {
-                        reportError(input, output, e);
-                    }
+                            results.push({
+                                source: input,
+                                result: {
+                                    filesRead: [input].concat(imports),
+                                    filesWritten: options.sourceMap ? [output, sourceMapOutput] : [output]
+                                }
+                            });
+
+                            parseDone();
+                        });
+                    });
                 }
             });
-        };
-
-        fs.readFile(input, 'utf8', parseLessFile);
-
-    };
-
-    jobs.forEach(doJob);
-}());
+        });
+    });
+})();

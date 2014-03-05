@@ -1,0 +1,3 @@
+# Compile an less file and see that errors are reported.
+-> compile
+$ exists target/unrecognised-input-error
