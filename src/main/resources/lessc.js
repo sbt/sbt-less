@@ -85,8 +85,7 @@
                         rootpath: options.rootPath || "",
                         silent: options.silent,
                         sourceMap: options.sourceMap,
-                        sourceMapBasepath: sourceFileMapping[0]
-                            .substring(0, sourceFileMapping[0].length - sourceFileMapping[1].length),
+                        sourceMapBasepath: path.dirname(input),
                         sourceMapFilename: path.basename(sourceMapOutput),
                         sourceMapOutputFilename: path.basename(outputFile),
                         strictMath: options.strictMath,
