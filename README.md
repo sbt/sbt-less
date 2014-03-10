@@ -1,6 +1,8 @@
 sbt-less-plugin
 ===============
 
+[![Build Status](https://api.travis-ci.org/sbt/sbt-less-plugin.png?branch=master)](https://travis-ci.org/sbt/sbt-less-plugin)
+
 Allows less to be used from within sbt. Builds on com.typesafe.sbt:js-engine in order to execute the less compiler along with
 the scripts to verify. js-engine enables high performance linting given parallelism and native JS engine execution.
 
