@@ -9,22 +9,13 @@ the scripts to verify. js-engine enables high performance linting given parallel
 To use this plugin use the addSbtPlugin command within your project's plugins.sbt (or as a global setting) i.e.:
 
 ```scala
-addSbtPlugin("com.typesafe" % "sbt-less-plugin" % "1.0.0-M1")
-```
+resolvers ++= Seq(
+    Resolver.url("sbt snapshot plugins", url("http://repo.scala-sbt.org/scalasbt/sbt-plugin-snapshots"))(Resolver.ivyStylePatterns),
+    Resolver.sonatypeRepo("snapshots"),
+    "Typesafe Snapshots Repository" at "http://repo.typesafe.com/typesafe/snapshots/"
+    )
 
-Then declare the settings required in your build file (SbtLessPlugin depends on some other, more generalised settings to be
-defined). For example, for build.sbt:
-
-```scala
-import com.typesafe.sbt.web.SbtWebPlugin
-import com.typesafe.sbt.jse.SbtJsTaskPlugin
-import com.typesafe.sbt.less.SbtLessPlugin
-
-SbtWebPlugin.webSettings
-
-SbtJsTaskPlugin.jsEngineAndTaskSettings
-
-SbtLessPlugin.lessSettings
+addSbtPlugin("com.typesafe.sbt" % "sbt-less-plugin" % "1.0.0-SNAPSHOT")
 ```
 
 The compiler allows most of the same options to be specified as the (lessc CLI itself)[http://lesscss.org/usage/].
@@ -55,6 +46,9 @@ verbose             | Be verbose.
 The following sbt code illustrates how compression can be enabled:
 
 ```scala
+import com.typesafe.sbt.web.SbtWebPlugin._
+import com.typesafe.sbt.less.SbtLessPlugin._
+
 LessKeys.compress in WebKeys.Assets := true
 ```
 

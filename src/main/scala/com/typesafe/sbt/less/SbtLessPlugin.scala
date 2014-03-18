@@ -6,7 +6,9 @@ import com.typesafe.sbt.web._
 import com.typesafe.sbt.jse.SbtJsTaskPlugin
 import spray.json._
 
-object SbtLessPlugin extends SbtJsTaskPlugin {
+object SbtLessPlugin extends AutoPlugin {
+
+  def select = SbtJsTaskPlugin
 
   object LessKeys {
     val less = TaskKey[Seq[File]]("less", "Invoke the less compiler.")
@@ -33,6 +35,7 @@ object SbtLessPlugin extends SbtJsTaskPlugin {
   }
 
   import SbtWebPlugin.WebKeys._
+  import SbtJsTaskPlugin._
   import SbtJsTaskPlugin.JsTaskKeys._
   import LessKeys._
 
@@ -64,7 +67,7 @@ object SbtLessPlugin extends SbtJsTaskPlugin {
     ).toString()
   )
 
-  val lessSettings = Seq(
+  override def projectSettings = Seq(
     cleancss := false,
     cleancssOptions := "",
     color := false,

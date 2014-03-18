@@ -31,14 +31,7 @@ object TestBuild extends Build {
   lazy val root = Project(
     id = "test-build",
     base = file("."),
-    settings =
-      Project.defaultSettings ++
-        SbtWebPlugin.webSettings ++
-        SbtJsTaskPlugin.jsEngineAndTaskSettings ++
-        SbtLessPlugin.lessSettings ++
-        Seq(
-          SbtWebPlugin.WebKeys.reporter := new TestReporter(target.value)
-        )
+    settings = Seq(SbtWebPlugin.WebKeys.reporter := new TestReporter(target.value))
   )
 
 }

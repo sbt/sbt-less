@@ -1,10 +1,5 @@
-import com.typesafe.sbt.jse.SbtJsTaskPlugin
-
-webSettings
-
-SbtJsTaskPlugin.jsEngineAndTaskSettings
-
-lessSettings
+import com.typesafe.sbt.web.SbtWebPlugin._
+import com.typesafe.sbt.less.SbtLessPlugin._
 
 val checkMapFileContents = taskKey[Unit]("check that map contents are correct")
 
