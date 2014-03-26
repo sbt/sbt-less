@@ -20,9 +20,9 @@ addSbtPlugin("com.typesafe.sbt" % "sbt-less-plugin" % "1.0.0-SNAPSHOT")
 
 Your project's build file also needs to enable sbt-web plugins. For example with build.sbt:
 
-    import com.typesafe.sbt.web.SbtWebPlugin
+    import com.typesafe.sbt.web.SbtWeb
 
-    lazy val root = project.in(file(".")).addPlugins(SbtWebPlugin)
+    lazy val root = project.in(file(".")).addPlugins(SbtWeb)
 
 The compiler allows most of the same options to be specified as the (lessc CLI itself)[http://lesscss.org/usage/].
 Here are the options:
@@ -52,8 +52,8 @@ verbose             | Be verbose.
 The following sbt code illustrates how compression can be enabled:
 
 ```scala
-import com.typesafe.sbt.web.SbtWebPlugin._
-import com.typesafe.sbt.less.SbtLessPlugin._
+import com.typesafe.sbt.web.SbtWeb._
+import com.typesafe.sbt.less.SbtLess._
 
 LessKeys.compress in WebKeys.Assets := true
 ```

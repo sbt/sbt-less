@@ -3,12 +3,12 @@ package com.typesafe.sbt.less
 import sbt._
 import sbt.Keys._
 import com.typesafe.sbt.web._
-import com.typesafe.sbt.jse.SbtJsTaskPlugin
+import com.typesafe.sbt.jse.SbtJsTask
 import spray.json._
 
-object SbtLessPlugin extends AutoPlugin {
+object SbtLess extends AutoPlugin {
 
-  override def requires = SbtJsTaskPlugin
+  override def requires = SbtJsTask
   override def trigger = AllRequirements
 
   object LessKeys {
@@ -35,9 +35,9 @@ object SbtLessPlugin extends AutoPlugin {
     val verbose = SettingKey[Boolean]("less-verbose", "Be verbose.")
   }
 
-  import SbtWebPlugin.WebKeys._
-  import SbtJsTaskPlugin._
-  import SbtJsTaskPlugin.JsTaskKeys._
+  import SbtWeb.WebKeys._
+  import SbtJsTask._
+  import SbtJsTask.JsTaskKeys._
   import LessKeys._
 
   val lessUnscopedSettings = Seq(

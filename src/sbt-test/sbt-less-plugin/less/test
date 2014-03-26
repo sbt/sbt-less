@@ -6,7 +6,7 @@ $ exists target/web/public/main/css/a.css.map
 
 # Compile with compression
 
-> set com.typesafe.sbt.less.SbtLessPlugin.LessKeys.compress in com.typesafe.sbt.web.SbtWebPlugin.WebKeys.Assets := true
+> set com.typesafe.sbt.less.SbtLess.LessKeys.compress in com.typesafe.sbt.web.SbtWeb.WebKeys.Assets := true
 > assets
 -$ exists target/web/public/main/css/a.css
 -$ exists target/web/public/main/css/a.css.map

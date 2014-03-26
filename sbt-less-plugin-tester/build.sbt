@@ -1,8 +1,8 @@
-import com.typesafe.sbt.web.SbtWebPlugin
-import com.typesafe.sbt.web.SbtWebPlugin._
+import com.typesafe.sbt.web.SbtWeb
+import com.typesafe.sbt.web.SbtWeb._
 import com.typesafe.sbt.less.SbtLessPlugin._
 
-lazy val root = project.in(file(".")).addPlugins(SbtWebPlugin)
+lazy val root = project.in(file(".")).addPlugins(SbtWeb)
 
 //JsEngineKeys.engineType := JsEngineKeys.EngineType.Node
 

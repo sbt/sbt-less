@@ -2,7 +2,7 @@ import java.util.concurrent.atomic.AtomicInteger
 import sbt._
 import sbt.Keys._
 
-import com.typesafe.sbt.web.SbtWebPlugin
+import com.typesafe.sbt.web.SbtWeb
 
 object TestBuild extends Build {
 
@@ -29,7 +29,7 @@ object TestBuild extends Build {
   lazy val root = Project(
     id = "test-build",
     base = file("."),
-    settings = Seq(SbtWebPlugin.WebKeys.reporter := new TestReporter(target.value))
-  ).addPlugins(SbtWebPlugin)
+    settings = Seq(SbtWeb.WebKeys.reporter := new TestReporter(target.value))
+  ).addPlugins(SbtWeb)
 
 }
