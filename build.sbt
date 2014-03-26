@@ -2,7 +2,7 @@ sbtPlugin := true
 
 organization := "com.typesafe.sbt"
 
-name := "sbt-less-plugin"
+name := "sbt-less"
 
 version := "1.0.0-SNAPSHOT"
 
