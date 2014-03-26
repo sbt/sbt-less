@@ -8,7 +8,8 @@ import spray.json._
 
 object SbtLessPlugin extends AutoPlugin {
 
-  def select = SbtJsTaskPlugin
+  override def requires = SbtJsTaskPlugin
+  override def trigger = AllRequirements
 
   object LessKeys {
     val less = TaskKey[Seq[File]]("less", "Invoke the less compiler.")

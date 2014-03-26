@@ -18,6 +18,12 @@ resolvers ++= Seq(
 addSbtPlugin("com.typesafe.sbt" % "sbt-less-plugin" % "1.0.0-SNAPSHOT")
 ```
 
+Your project's build file also needs to enable sbt-web plugins. For example with build.sbt:
+
+    import com.typesafe.sbt.web.SbtWebPlugin
+
+    lazy val root = project.in(file(".")).addPlugins(SbtWebPlugin)
+
 The compiler allows most of the same options to be specified as the (lessc CLI itself)[http://lesscss.org/usage/].
 Here are the options:
 

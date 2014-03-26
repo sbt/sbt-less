@@ -1,5 +1,8 @@
+import com.typesafe.sbt.web.SbtWebPlugin
 import com.typesafe.sbt.web.SbtWebPlugin._
 import com.typesafe.sbt.less.SbtLessPlugin._
+
+lazy val root = project.in(file(".")).addPlugins(SbtWebPlugin)
 
 val checkMapFileContents = taskKey[Unit]("check that map contents are correct")
 

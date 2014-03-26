@@ -3,8 +3,6 @@ import sbt._
 import sbt.Keys._
 
 import com.typesafe.sbt.web.SbtWebPlugin
-import com.typesafe.sbt.jse.SbtJsTaskPlugin
-import com.typesafe.sbt.less.SbtLessPlugin
 
 object TestBuild extends Build {
 
@@ -32,6 +30,6 @@ object TestBuild extends Build {
     id = "test-build",
     base = file("."),
     settings = Seq(SbtWebPlugin.WebKeys.reporter := new TestReporter(target.value))
-  )
+  ).addPlugins(SbtWebPlugin)
 
 }
