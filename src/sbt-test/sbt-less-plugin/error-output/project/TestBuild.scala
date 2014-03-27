@@ -3,6 +3,7 @@ import sbt._
 import sbt.Keys._
 
 import com.typesafe.sbt.web.SbtWeb
+import com.typesafe.sbt.web.SbtWeb.autoImport._
 
 object TestBuild extends Build {
 
@@ -29,7 +30,7 @@ object TestBuild extends Build {
   lazy val root = Project(
     id = "test-build",
     base = file("."),
-    settings = Seq(SbtWeb.WebKeys.reporter := new TestReporter(target.value))
+    settings = Seq(WebKeys.reporter := new TestReporter(target.value))
   ).addPlugins(SbtWeb)
 
 }

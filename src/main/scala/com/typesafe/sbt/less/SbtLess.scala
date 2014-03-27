@@ -6,10 +6,7 @@ import com.typesafe.sbt.web._
 import com.typesafe.sbt.jse.SbtJsTask
 import spray.json._
 
-object SbtLess extends AutoPlugin {
-
-  override def requires = SbtJsTask
-  override def trigger = AllRequirements
+object Import {
 
   object LessKeys {
     val less = TaskKey[Seq[File]]("less", "Invoke the less compiler.")
@@ -35,10 +32,19 @@ object SbtLess extends AutoPlugin {
     val verbose = SettingKey[Boolean]("less-verbose", "Be verbose.")
   }
 
-  import SbtWeb.WebKeys._
-  import SbtJsTask._
-  import SbtJsTask.JsTaskKeys._
-  import LessKeys._
+}
+
+object SbtLess extends AutoPlugin {
+
+  override def requires = SbtJsTask
+
+  override def trigger = AllRequirements
+
+  val autoImport = Import
+
+  import SbtWeb.autoImport.WebKeys._
+  import SbtJsTask.autoImport.JsTaskKeys._
+  import autoImport.LessKeys._
 
   val lessUnscopedSettings = Seq(
 
@@ -90,7 +96,7 @@ object SbtLess extends AutoPlugin {
     verbose := false
 
   ) ++ inTask(less)(
-    jsTaskSpecificUnscopedSettings ++
+    SbtJsTask.jsTaskSpecificUnscopedSettings ++
       inConfig(Assets)(lessUnscopedSettings) ++
       inConfig(TestAssets)(lessUnscopedSettings) ++
       Seq(
@@ -101,7 +107,7 @@ object SbtLess extends AutoPlugin {
         taskMessage in Assets := "LESS compiling",
         taskMessage in TestAssets := "LESS test compiling"
       )
-  ) ++ addJsSourceFileTasks(less) ++ Seq(
+  ) ++ SbtJsTask.addJsSourceFileTasks(less) ++ Seq(
     less in Assets := (less in Assets).dependsOn(webModules in Assets).value,
     less in TestAssets := (less in TestAssets).dependsOn(webModules in TestAssets).value
   )
