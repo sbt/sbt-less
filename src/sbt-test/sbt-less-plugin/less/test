@@ -6,7 +6,7 @@ $ exists target/web/public/main/css/a.css.map
 
 # Compile with compression
 
-> set LessKeys.compress in WebKeys.Assets := true
+> set LessKeys.compress in Assets := true
 > assets
 -$ exists target/web/public/main/css/a.css
 -$ exists target/web/public/main/css/a.css.map
