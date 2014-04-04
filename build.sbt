@@ -4,7 +4,7 @@ organization := "com.typesafe.sbt"
 
 name := "sbt-less"
 
-version := "1.0.0-SNAPSHOT"
+version := "1.0.0-M2"
 
 scalaVersion := "2.10.3"
 
@@ -25,11 +25,14 @@ resolvers ++= Seq(
   "Typesafe Snapshots Repository" at "http://repo.typesafe.com/typesafe/snapshots/"
 )
 
-addSbtPlugin("com.typesafe.sbt" %% "sbt-js-engine" % "1.0.0-SNAPSHOT")
+addSbtPlugin("com.typesafe.sbt" %% "sbt-js-engine" % "1.0.0-M2")
 
 scriptedSettings
 
 scriptedLaunchOpts <+= version apply { v => s"-Dproject.version=$v" }
+
+// FIXME: Working around https://github.com/sbt/sbt/issues/1156#issuecomment-39317363
+isSnapshot := true
 
 publishMavenStyle := false
 
