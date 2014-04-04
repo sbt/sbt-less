@@ -4,7 +4,7 @@ organization := "com.typesafe.sbt"
 
 name := "sbt-less"
 
-version := "1.0.0-M2a"
+version := "1.0.0-SNAPSHOT"
 
 scalaVersion := "2.10.3"
 
