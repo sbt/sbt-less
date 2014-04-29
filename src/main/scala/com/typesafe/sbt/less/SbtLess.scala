@@ -49,6 +49,8 @@ object SbtLess extends AutoPlugin {
 
   val lessUnscopedSettings = Seq(
 
+    includeFilter := GlobFilter("main.less"),
+
     jsOptions := JsObject(
       "cleancss" -> JsBoolean(cleancss.value),
       "cleancssOptions" -> JsString(cleancssOptions.value),
@@ -102,8 +104,7 @@ object SbtLess extends AutoPlugin {
       inConfig(TestAssets)(lessUnscopedSettings) ++
       Seq(
         moduleName := "less",
-        shellFile := "lessc.js",
-        fileFilter := GlobFilter("*.less"),
+        shellFile := getClass.getClassLoader.getResource("lessc.js"),
 
         taskMessage in Assets := "LESS compiling",
         taskMessage in TestAssets := "LESS test compiling"

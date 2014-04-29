@@ -1,6 +1,6 @@
 # Compile a less file
 
 > assets
-$ exists target/web/public/main/a.css
-$ exists target/web/public/main/a.css.map
+$ exists target/web/public/main/main.css
+$ exists target/web/public/main/main.css.map
 

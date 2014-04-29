@@ -47,16 +47,24 @@ The following sbt code illustrates how compression can be enabled:
 LessKeys.compress in Assets := true
 ```
 
-In addition you may want to exclude LESS files that are not considered targets for the compiler. Quite commonly,
-LESS files are divided up into those entry point files and other files, with the latter set intended for importing into
-the entry point files. These other files tend not to be suitable for the compiler in isolation as they can depend on
-the global declarations made by other non-imported LESS files. To exclude LESS files you could, for example, use
-the following declaration:
+By default only `main.less` is looked for given that the LESS compiler must be explicitly fed the files
+that are required for compilation. Beyond just `main.less`, you can use an expression in your `build.sbt` like the
+following:
 
 ```scala
-excludeFilter in Assets := new PatternFilter("""[^_].*\.less""".r.pattern)
+includeFilter in (Assets, LessKeys.less) := "foo.less" | "bar.less"
 ```
 
-The above would exclude all LESS files that being with an underscore character.
+Alternatively you may want a more general expression to exclude LESS files that are not considered targets
+for the compiler. Quite commonly, LESS files are divided up into those entry point files and other files, with the
+latter set intended for importing into the entry point files. These other files tend not to be suitable for the
+compiler in isolation as they can depend on the global declarations made by other non-imported LESS files. To
+include all `.less` files but exclude any beginning with an `_` you can use the following declaration:
+
+```scala
+includeFilter in (Assets, LessKeys.less) := "*.less"
+
+excludeFilter in (Assets, LessKeys.less) := new PatternFilter("""[_].*\.less""".r.pattern)
+```
 
 &copy; Typesafe Inc., 2013, 2014
