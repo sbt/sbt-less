@@ -1,4 +1,4 @@
-lazy val root = (project in file(".")).addPlugins(SbtWeb)
+lazy val root = (project in file(".")).enablePlugins(SbtWeb)
 
 val checkMapFileContents = taskKey[Unit]("check that map contents are correct")
 

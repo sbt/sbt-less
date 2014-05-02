@@ -31,6 +31,6 @@ object TestBuild extends Build {
     id = "test-build",
     base = file("."),
     settings = Seq(WebKeys.reporter := new TestReporter(target.value))
-  ).addPlugins(SbtWeb)
+  ).enablePlugins(SbtWeb)
 
 }

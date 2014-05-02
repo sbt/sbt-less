@@ -14,7 +14,7 @@ addSbtPlugin("com.typesafe.sbt" % "sbt-less" % "1.0.0-M2a")
 
 Your project's build file also needs to enable sbt-web plugins. For example with build.sbt:
 
-    lazy val root = (project in file(".")).addPlugins(SbtWeb)
+    lazy val root = (project in file(".")).enablePlugins(SbtWeb)
 
 The compiler allows most of the same options to be specified as the (lessc CLI itself)[http://lesscss.org/usage/].
 Here are the options:
