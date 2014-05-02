@@ -55,10 +55,13 @@ following:
 includeFilter in (Assets, LessKeys.less) := "foo.less" | "bar.less"
 ```
 
+...where both `foo.less` and `bar.less` will be considered for the LESS compiler.
+
 Alternatively you may want a more general expression to exclude LESS files that are not considered targets
 for the compiler. Quite commonly, LESS files are divided up into those entry point files and other files, with the
 latter set intended for importing into the entry point files. These other files tend not to be suitable for the
-compiler in isolation as they can depend on the global declarations made by other non-imported LESS files. To
+compiler in isolation as they can depend on the global declarations made by other non-imported LESS files. For example,
+you may have a convention where any LESS file starting with an `_` should not be considered for direct compilation. To
 include all `.less` files but exclude any beginning with an `_` you can use the following declaration:
 
 ```scala
