@@ -67,7 +67,7 @@ include all `.less` files but exclude any beginning with an `_` you can use the 
 ```scala
 includeFilter in (Assets, LessKeys.less) := "*.less"
 
-excludeFilter in (Assets, LessKeys.less) := new PatternFilter("""[_].*\.less""".r.pattern)
+excludeFilter in (Assets, LessKeys.less) := "_*.less"
 ```
 
 &copy; Typesafe Inc., 2013, 2014
