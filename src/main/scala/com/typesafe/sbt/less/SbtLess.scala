@@ -4,9 +4,12 @@ import sbt._
 import sbt.Keys._
 import com.typesafe.sbt.web._
 import com.typesafe.sbt.jse.SbtJsTask
+import com.typesafe.sbt.web.pipeline.Pipeline
 import spray.json._
 
 object Import {
+
+  val removeLessSources = TaskKey[Pipeline.Stage]("less-remove-sources", "Remove less source files.")
 
   object LessKeys {
     val less = TaskKey[Seq[File]]("less", "Invoke the less compiler.")
@@ -42,6 +45,7 @@ object SbtLess extends AutoPlugin {
 
   val autoImport = Import
 
+  import autoImport._
   import SbtWeb.autoImport._
   import WebKeys._
   import SbtJsTask.autoImport.JsTaskKeys._
@@ -111,7 +115,16 @@ object SbtLess extends AutoPlugin {
       )
   ) ++ SbtJsTask.addJsSourceFileTasks(less) ++ Seq(
     less in Assets := (less in Assets).dependsOn(webModules in Assets).value,
-    less in TestAssets := (less in TestAssets).dependsOn(webModules in TestAssets).value
+    less in TestAssets := (less in TestAssets).dependsOn(webModules in TestAssets).value,
+    removeLessSources := removeSources.value
   )
+
+  private def removeSources: Def.Initialize[Task[Pipeline.Stage]] = Def.task {
+    mappings =>
+
+      val mappingsToRemove = mappings.filter(f => f._1.getName.endsWith(".less"))
+
+      (mappings.toSet -- mappingsToRemove.toSet).toSeq
+  }
 
 }
