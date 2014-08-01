@@ -70,4 +70,32 @@ includeFilter in (Assets, LessKeys.less) := "*.less"
 excludeFilter in (Assets, LessKeys.less) := "_*.less"
 ```
 
+If you're using Build.scala instead of build.sbt, you'll need to import the Assets and LessKeys symbols, in addition to the standard sbt and Play imports: 
+
+```scala
+import com.typesafe.sbt.less.Import.LessKeys
+import com.typesafe.sbt.web.Import.Assets
+import sbt._
+import Process._
+import Keys._
+import play.Play.autoImport._
+import PlayKeys._
+
+object ApplicationBuild extends Build {
+
+  val appName = "myproject"
+  val appVersion = "1.0-SNAPSHOT"
+
+  val appDependencies = Seq()
+
+  val main = Project(appName, file(".")).enablePlugins(play.PlayScala).settings(
+    version := appVersion,
+    libraryDependencies ++= appDependencies, 
+    includeFilter in (Assets, LessKeys.less) := "*.less",
+    excludeFilter in (Assets, LessKeys.less) := "_*.less"
+  )
+
+}
+```
+
 &copy; Typesafe Inc., 2013, 2014
