@@ -73,8 +73,8 @@ excludeFilter in (Assets, LessKeys.less) := "_*.less"
 If you're using Build.scala instead of build.sbt, you'll need to import the Assets and LessKeys symbols, in addition to the standard sbt and Play imports: 
 
 ```scala
-import com.typesafe.sbt.less.Import.LessKeys
-import com.typesafe.sbt.web.Import.Assets
+import com.typesafe.sbt.web.SbtWeb.autoImport._
+import com.typesafe.sbt.less.SbtLess.autoImport._
 import sbt._
 import Process._
 import Keys._
