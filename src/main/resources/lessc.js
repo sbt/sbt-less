@@ -43,6 +43,23 @@
             throwIfErr(e);
 
             var writeSourceMap = function (content) {
+              
+                if (options.relativeImports) {
+                    // replace leading part in included assets with "../"
+                    content = JSON.parse(content);
+                    for (var i = 0, s = content.sources, l = s.length; i < l; i++) {
+                        options.paths.forEach(function (path) {
+                            // for windows replace \ with /
+                            path = path.replace(/\\/g, "/");
+                            if (path[path.length - 1] !== "/")
+                                path += "/";
+                            if (s[i].substr(0, path.length) === path)
+                                s[i] = "../" + s[i].substr(path.length);
+                        });
+                    }
+                    content = JSON.stringify(content);
+                }
+              
                 mkdirp(path.dirname(sourceMapOutput), function (e) {
                     throwIfErr(e);
                     fs.writeFile(sourceMapOutput, content, "utf8", throwIfErr);

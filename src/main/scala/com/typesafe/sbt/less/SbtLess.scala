@@ -19,6 +19,7 @@ object Import {
     val insecure = SettingKey[Boolean]("less-insecure", "Allow imports from insecure https hosts.")
     val maxLineLen = SettingKey[Int]("less-max-line-len", "Maximum line length.")
     val optimization = SettingKey[Int]("less-optimization", "Set the parser's optimization level.")
+    val relativeImports = SettingKey[Boolean]("less-relative-imports", "Re-write import paths relative to the base less file.")
     val relativeUrls = SettingKey[Boolean]("less-relative-urls", "Re-write relative urls to the base less file.")
     val rootpath = SettingKey[String]("less-rootpath", "Set rootpath for url rewriting in relative imports and urls.")
     val silent = SettingKey[Boolean]("less-silent", "Suppress output of error messages.")
@@ -64,6 +65,7 @@ object SbtLess extends AutoPlugin {
         (sourceDirectories.value ++ resourceDirectories.value ++ webModuleDirectories.value)
           .map(f => JsString(f.getAbsolutePath)).toList
       ),
+      "relativeImports" -> JsBoolean(relativeImports.value),
       "relativeUrls" -> JsBoolean(relativeUrls.value),
       "rootpath" -> JsString(rootpath.value),
       "silent" -> JsBoolean(silent.value),
@@ -86,6 +88,7 @@ object SbtLess extends AutoPlugin {
     insecure := false,
     maxLineLen := -1,
     optimization := 1,
+    relativeImports := true,
     relativeUrls := false,
     rootpath := "",
     silent := false,
