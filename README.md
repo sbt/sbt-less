@@ -29,6 +29,7 @@ ieCompat            | Do IE compatibility checks.
 insecure            | Allow imports from insecure https hosts.
 maxLineLen          | Maximum line length.
 optimization        | Set the parser's optimization level.
+relativeImports     | Re-write import paths relative to the base less file. Default is true.
 relativeUrls        | Re-write relative urls to the base less file.
 rootpath            | Set rootpath for url rewriting in relative imports and urls.
 silent              | Suppress output of error messages.
