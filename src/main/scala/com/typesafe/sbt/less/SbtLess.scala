@@ -15,6 +15,7 @@ object Import {
     val cleancssOptions = SettingKey[String]("less-cleancss-options", "Pass an option to clean css, using CLI arguments from https://github.com/GoalSmashers/clean-css .")
     val color = SettingKey[Boolean]("less-color", "Whether LESS output should be colorised")
     val compress = SettingKey[Boolean]("less-compress", "Compress output by removing some whitespaces.")
+    val globalVariables = SettingKey[Seq[(String, String)]]("less-global-variables", "Variables that will be placed at the top of the less file.")
     val ieCompat = SettingKey[Boolean]("less-ie-compat", "Do IE compatibility checks.")
     val insecure = SettingKey[Boolean]("less-insecure", "Allow imports from insecure https hosts.")
     val maxLineLen = SettingKey[Int]("less-max-line-len", "Maximum line length.")
@@ -57,6 +58,11 @@ object SbtLess extends AutoPlugin {
       "cleancssOptions" -> JsString(cleancssOptions.value),
       "color" -> JsBoolean(color.value),
       "compress" -> JsBoolean(compress.value),
+      "globalVariables" -> JsString(
+        globalVariables.value.map { 
+          case (key, value) => "@" + key + ": " + value + ";\n" 
+        }.mkString
+      ),
       "ieCompat" -> JsBoolean(ieCompat.value),
       "insecure" -> JsBoolean(insecure.value),
       "maxLineLen" -> JsNumber(maxLineLen.value),
@@ -84,6 +90,7 @@ object SbtLess extends AutoPlugin {
     cleancssOptions := "",
     color := false,
     compress := false,
+    globalVariables := Seq.empty,
     ieCompat := true,
     insecure := false,
     maxLineLen := -1,

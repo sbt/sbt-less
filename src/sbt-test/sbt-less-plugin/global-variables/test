@@ -1,0 +1,8 @@
+# Compile a less file
+
+> assets
+$ exists target/web/public/main/css/main.css
+
+# Check variable presence
+> checkFileContents
+
