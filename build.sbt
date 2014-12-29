@@ -4,8 +4,6 @@ organization := "com.typesafe.sbt"
 
 name := "sbt-less"
 
-version := "1.0.5-SNAPSHOT"
-
 scalaVersion := "2.10.4"
 
 libraryDependencies ++= Seq(
