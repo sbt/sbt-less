@@ -72,71 +72,83 @@
 
             options.filename = input; // Yuk, but I can't be bothered copying as there is no easy way in JS.
             var parser = new (less.Parser)(options);
-            parser.parse(contentWithVars, function (e, tree) {
-                if (e) {
+
+            function handleLessError(e) {
+                if (e.line != undefined && e.column != undefined) {
                     problems.push({
                         message: e.message,
                         severity: "error",
                         lineNumber: e.line,
                         characterOffset: e.column,
-                        lineContent: contentWithVars.split("\n")[e.line],
+                        lineContent: contentWithVars.split("\n")[e.line - 1],
                         source: input
                     });
-                    results.push({
-                        source: input,
-                        result: null
-                    });
+                } else {
+                    throw e;
+                }
+                results.push({
+                    source: input,
+                    result: null
+                });
 
-                    parseDone();
+                parseDone();
+            }
 
+            parser.parse(contentWithVars, function (e, tree) {
+                if (e) {
+                    handleLessError(e);
                 } else {
 
-                    var css = tree.toCSS({
-                        cleancss: options.cleancss,
-                        cleancssOptions: options.cleancssOptions || {},
-                        compress: options.compress,
-                        ieCompat: options.ieCompat || true,
-                        maxLineLen: options.maxLineLen,
-                        outputSourceFiles: options.outputSourceFiles,
-                        relativeUrls: options.relativeUrls,
-                        rootpath: options.rootPath || "",
-                        silent: options.silent,
-                        sourceMap: options.sourceMap,
-                        sourceMapBasepath: path.dirname(input),
-                        sourceMapFilename: path.basename(sourceMapOutput),
-                        sourceMapOutputFilename: path.basename(outputFile),
-                        strictMath: options.strictMath,
-                        strictUnits: options.strictUnits,
-                        urlArgs: options.urlArgs || "",
-                        verbose: options.verbose,
-                        writeSourceMap: writeSourceMap
-                    });
+                    try {
+                        var css = tree.toCSS({
+                            cleancss: options.cleancss,
+                            cleancssOptions: options.cleancssOptions || {},
+                            compress: options.compress,
+                            ieCompat: options.ieCompat || true,
+                            maxLineLen: options.maxLineLen,
+                            outputSourceFiles: options.outputSourceFiles,
+                            relativeUrls: options.relativeUrls,
+                            rootpath: options.rootPath || "",
+                            silent: options.silent,
+                            sourceMap: options.sourceMap,
+                            sourceMapBasepath: path.dirname(input),
+                            sourceMapFilename: path.basename(sourceMapOutput),
+                            sourceMapOutputFilename: path.basename(outputFile),
+                            strictMath: options.strictMath,
+                            strictUnits: options.strictUnits,
+                            urlArgs: options.urlArgs || "",
+                            verbose: options.verbose,
+                            writeSourceMap: writeSourceMap
+                        });
 
-                    mkdirp(path.dirname(output), function (e) {
-                        throwIfErr(e);
-
-                        fs.writeFile(output, css, "utf8", function (e) {
+                        mkdirp(path.dirname(output), function (e) {
                             throwIfErr(e);
 
-                            var imports = [];
-                            var files = parser.imports.files;
-                            for (var file in files) {
-                                if (files.hasOwnProperty(file)) {
-                                    imports.push(file);
-                                }
-                            }
+                            fs.writeFile(output, css, "utf8", function (e) {
+                                throwIfErr(e);
 
-                            results.push({
-                                source: input,
-                                result: {
-                                    filesRead: [input].concat(imports),
-                                    filesWritten: options.sourceMap ? [output, sourceMapOutput] : [output]
+                                var imports = [];
+                                var files = parser.imports.files;
+                                for (var file in files) {
+                                    if (files.hasOwnProperty(file)) {
+                                        imports.push(file);
+                                    }
                                 }
+
+                                results.push({
+                                    source: input,
+                                    result: {
+                                        filesRead: [input].concat(imports),
+                                        filesWritten: options.sourceMap ? [output, sourceMapOutput] : [output]
+                                    }
+                                });
+
+                                parseDone();
                             });
-
-                            parseDone();
                         });
-                    });
+                    } catch (e) {
+                        handleLessError(e);
+                    }
                 }
             });
         });
