@@ -9,7 +9,8 @@ scalaVersion := "2.10.4"
 libraryDependencies ++= Seq(
   "org.webjars" % "less-node" % "1.7.5",
   "org.webjars" % "source-map" % "0.1.31-2",
-  "org.webjars" % "mkdirp" % "0.3.5"
+  "org.webjars" % "mkdirp" % "0.3.5",
+  "org.webjars" % "clean-css" % "2.2.7"
 )
 
 resolvers ++= Seq(
