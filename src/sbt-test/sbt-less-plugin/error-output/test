@@ -4,7 +4,7 @@
 -> assets
 
 > error-exists    main.less 1 45
-> error-msg       main.less Unrecognised input
+> error-msg       main.less Unrecognised input. Possibly missing something
 > error-contents  main.less This is no place for anything less than less
 
 > error-exists    missing-variable.less 2 16
@@ -20,7 +20,7 @@
 -> assets
 
 > error-exists    main.less 1 45
-> error-msg       main.less Unrecognised input
+> error-msg       main.less Unrecognised input. Possibly missing something
 > error-contents  main.less This is no place for anything less than less
 
 > error-exists    missing-variable.less 2 16

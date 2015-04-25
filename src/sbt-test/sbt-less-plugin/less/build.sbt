@@ -4,7 +4,9 @@ val checkMapFileContents = taskKey[Unit]("check that map contents are correct")
 
 checkMapFileContents := {
   val contents = IO.read((WebKeys.public in Assets).value / "css" / "main.min.css.map")
-  if (contents != """{"version":3,"file":"main.min.css","sources":["main.less"],"names":[],"mappings":"AAAA,GACE"}""") {
-    sys.error(s"Unexpected contents: $contents")
+  val expectedContents = """{"version":3,"sources":["main.less"],"names":[],"mappings":"AAAA,GACE","file":"main.min.css"}"""
+
+  if (contents != expectedContents) {
+    sys.error(s"Unexpected contents: $contents, \nexpected: $expectedContents")
   }
 }
