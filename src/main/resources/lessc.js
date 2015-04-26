@@ -8,7 +8,7 @@
     //
     if (typeof Promise === 'undefined') {
         var Promise = require("es6-promise").Promise;
-        global.Promise = Promise
+        global.Promise = Promise;
     }
 
     var args = process.argv,
@@ -43,7 +43,7 @@
     sourceFileMappings.forEach(function (sourceFileMapping) {
 
         // Reparse options each time so we get a different object that can be modified
-        var options = JSON.parse(optionsString)
+        var options = JSON.parse(optionsString);
 
         var input = sourceFileMapping[0];
         var outputFile = sourceFileMapping[1].replace(".less", options.compress ? ".min.css" : ".css");

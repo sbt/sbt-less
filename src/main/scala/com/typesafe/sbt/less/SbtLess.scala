@@ -60,16 +60,8 @@ object SbtLess extends AutoPlugin {
       "cleancssOptions" -> JsString(cleancssOptions.value),
       "color" -> JsBoolean(color.value),
       "compress" -> JsBoolean(compress.value),
-      "globalVars" -> JsString(
-        globalVariables.value.map { 
-          case (key, value) => "@" + key + ": " + value + ";\n" 
-        }.mkString
-      ),
-      "modifyVars" -> JsString(
-        modifyVariables.value.map {
-          case (key, value) => "@" + key + ": " + value + ";\n"
-        }.mkString
-      ),
+      "globalVars" -> JsObject(globalVariables.value.toMap.mapValues(v => JsString(v))),
+      "modifyVars" -> JsObject(modifyVariables.value.toMap.mapValues(v => JsString(v))),
       "ieCompat" -> JsBoolean(ieCompat.value),
       "insecure" -> JsBoolean(insecure.value),
       "maxLineLen" -> JsNumber(maxLineLen.value),

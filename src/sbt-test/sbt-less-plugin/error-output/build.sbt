@@ -43,13 +43,13 @@ InputKey[Unit]("error-exists") := {
   errors.value.get(file) match {
     case Some((l, c, msg, contents)) =>
       if (line != l) {
-        throw new RuntimeException(s"Error in $file expected on line $line but was $l: $msg\n$contents")
+        throw new RuntimeException(s"Error in $file expected on line $line but was found on $l: $msg\n$contents\nAll errors: ${errors.value}")
       }
       if (col != c) {
-        throw new RuntimeException(s"Error in $file:$line expected on column $col but was $c: $msg\n$contents")
+        throw new RuntimeException(s"Error in $file:$line expected on column $col but was found on $c: $msg\n$contents\nAll errors: ${errors.value}")
       }
     case None =>
-      throw new RuntimeException(s"Error expected in $file but no error found (${errors.value})")
+      throw new RuntimeException(s"Error expected in $file but no error found.\nAll errors: ${errors.value}")
   }
 }
 
