@@ -60,8 +60,8 @@ object SbtLess extends AutoPlugin {
       "cleancssOptions" -> JsString(cleancssOptions.value),
       "color" -> JsBoolean(color.value),
       "compress" -> JsBoolean(compress.value),
-      "globalVars" -> JsObject(globalVariables.value.toMap.mapValues(v => JsString(v))),
-      "modifyVars" -> JsObject(modifyVariables.value.toMap.mapValues(v => JsString(v))),
+      "globalVars" -> toJsObjectOrNull(globalVariables.value),
+      "modifyVars" -> toJsObjectOrNull(modifyVariables.value),
       "ieCompat" -> JsBoolean(ieCompat.value),
       "insecure" -> JsBoolean(insecure.value),
       "maxLineLen" -> JsNumber(maxLineLen.value),
@@ -84,6 +84,11 @@ object SbtLess extends AutoPlugin {
       "verbose" -> JsBoolean(verbose.value)
     ).toString()
   )
+
+  private def toJsObjectOrNull(fields: Seq[(String, String)]): JsValue = {
+    if (fields.isEmpty) JsNull
+    else JsObject(fields.toMap.mapValues(v => JsString(v)))
+  }
 
   override def projectSettings = Seq(
     cleancss := false,

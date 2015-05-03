@@ -1,0 +1,29 @@
+> clean
+
+# Compile an less file and see that errors are reported.
+-> assets
+
+# NOTE: weired expected values are caused by https://github.com/less/less.js/issues/2573
+> error-exists    main.less 2 21
+> error-msg       main.less Unrecognised input. Possibly missing something
+> error-contents  main.less unknown line content
+
+> error-exists    missing-variable.less 3 2
+> error-msg       missing-variable.less variable @heading-font-family is undefined
+> error-contents  missing-variable.less }
+
+> reset-errors
+
+# Switch to node (if it exists)
+> set JsEngineKeys.engineType := ErrorBuild.maybeNode
+
+# Run all the same tests as before
+-> assets
+
+> error-exists    main.less 2 21
+> error-msg       main.less Unrecognised input. Possibly missing something
+> error-contents  main.less unknown line content
+
+> error-exists    missing-variable.less 3 2
+> error-msg       missing-variable.less variable @heading-font-family is undefined
+> error-contents  missing-variable.less }
