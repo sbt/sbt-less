@@ -13,14 +13,7 @@ libraryDependencies ++= Seq(
   "org.webjars" % "clean-css" % "2.2.7"
 )
 
-resolvers ++= Seq(
-  "Typesafe Releases Repository" at "http://repo.typesafe.com/typesafe/releases/",
-  Resolver.url("sbt snapshot plugins", url("http://repo.scala-sbt.org/scalasbt/sbt-plugin-snapshots"))(Resolver.ivyStylePatterns),
-  Resolver.sonatypeRepo("snapshots"),
-  "Typesafe Snapshots Repository" at "http://repo.typesafe.com/typesafe/snapshots/"
-)
-
-addSbtPlugin("com.typesafe.sbt" %% "sbt-js-engine" % "1.0.1")
+addSbtPlugin("com.typesafe.sbt" %% "sbt-js-engine" % "1.1.1")
 
 publishMavenStyle := false
 
