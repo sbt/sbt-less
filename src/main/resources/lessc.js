@@ -104,7 +104,7 @@
                             cleancss: options.cleancss,
                             cleancssOptions: options.cleancssOptions || {},
                             compress: options.compress,
-                            ieCompat: options.ieCompat || true,
+                            ieCompat: typeof options.ieCompat !== "undefined" ? options.ieCompat : true,
                             maxLineLen: options.maxLineLen,
                             outputSourceFiles: options.outputSourceFiles,
                             relativeUrls: options.relativeUrls,
