@@ -59,21 +59,22 @@
         options.plugins = [];
 
         var writeSourceMap = function (content, onDone) {
-
-            if (options.relativeImports) {
-                // replace leading part in included assets with "../"
-                content = JSON.parse(content);
-                for (var i = 0, s = content.sources, l = s.length; i < l; i++) {
-                    options.paths.forEach(function (path) {
-                        // for windows replace \ with /
-                        path = path.replace(/\\/g, "/");
-                        if (path[path.length - 1] !== "/")
-                            path += "/";
-                        if (s[i].substr(0, path.length) === path)
-                            s[i] = "../" + s[i].substr(path.length);
-                    });
+            if (content) { // NOTE: this is workaround for https://github.com/less/less.js/issues/2430
+                if (options.relativeImports) {
+                    // replace leading part in included assets with "../"
+                    content = JSON.parse(content);
+                    for (var i = 0, s = content.sources, l = s.length; i < l; i++) {
+                        options.paths.forEach(function(path) {
+                            // for windows replace \ with /
+                            path = path.replace(/\\/g, "/");
+                            if (path[path.length - 1] !== "/")
+                                path += "/";
+                            if (s[i].substr(0, path.length) === path)
+                                s[i] = "../" + s[i].substr(path.length);
+                        });
+                    }
+                    content = JSON.stringify(content);
                 }
-                content = JSON.stringify(content);
             }
 
             mkdirp(path.dirname(sourceMapOutput), function (e) {
