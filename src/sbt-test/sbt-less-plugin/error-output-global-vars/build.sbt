@@ -5,6 +5,8 @@ import scala.collection.concurrent.TrieMap
 lazy val root = (project in file("."))
   .enablePlugins(SbtWeb)
 
+LessKeys.globalVariables := Seq("padding" -> "10px")
+
 // Map of file name to line, column, error message, line contents
 val errors = SettingKey[TrieMap[String, (Int, Int, String, String)]]("errors")
 

@@ -19,6 +19,7 @@ object Import {
     val ieCompat = SettingKey[Boolean]("less-ie-compat", "Do IE compatibility checks.")
     val insecure = SettingKey[Boolean]("less-insecure", "Allow imports from insecure https hosts.")
     val maxLineLen = SettingKey[Int]("less-max-line-len", "Maximum line length.")
+    val modifyVariables = SettingKey[Seq[(String, String)]]("less-modify-variables", "Modifies a variable already declared in the file.")
     val optimization = SettingKey[Int]("less-optimization", "Set the parser's optimization level.")
     val relativeImports = SettingKey[Boolean]("less-relative-imports", "Re-write import paths relative to the base less file.")
     val relativeUrls = SettingKey[Boolean]("less-relative-urls", "Re-write relative urls to the base less file.")
@@ -31,6 +32,7 @@ object Import {
     val strictImports = SettingKey[Boolean]("less-scrict-imports", "Whether imports should be strict.")
     val strictMath = SettingKey[Boolean]("less-strict-math", "Requires brackets. This option may default to true and be removed in future.")
     val strictUnits = SettingKey[Boolean]("less-strict-units", "Whether all unit should be strict, or if mixed units are allowed.")
+    val urlArgs = SettingKey[String]("less-url-args", "Adds params into url tokens (e.g. 42, cb=42 or 'a=1&b=2').")
     val verbose = SettingKey[Boolean]("less-verbose", "Be verbose.")
   }
 
@@ -58,18 +60,15 @@ object SbtLess extends AutoPlugin {
       "cleancssOptions" -> JsString(cleancssOptions.value),
       "color" -> JsBoolean(color.value),
       "compress" -> JsBoolean(compress.value),
-      "globalVariables" -> JsString(
-        globalVariables.value.map { 
-          case (key, value) => "@" + key + ": " + value + ";\n" 
-        }.mkString
-      ),
+      "globalVars" -> toJsObjectOrNull(globalVariables.value),
+      "modifyVars" -> toJsObjectOrNull(modifyVariables.value),
       "ieCompat" -> JsBoolean(ieCompat.value),
       "insecure" -> JsBoolean(insecure.value),
       "maxLineLen" -> JsNumber(maxLineLen.value),
       "optimization" -> JsNumber(optimization.value),
       "paths" -> JsArray(
         (sourceDirectories.value ++ resourceDirectories.value ++ webModuleDirectories.value)
-          .map(f => JsString(f.getAbsolutePath)).toList
+          .map(f => JsString(f.getAbsolutePath)).toVector
       ),
       "relativeImports" -> JsBoolean(relativeImports.value),
       "relativeUrls" -> JsBoolean(relativeUrls.value),
@@ -80,10 +79,16 @@ object SbtLess extends AutoPlugin {
       "sourceMapLessInline" -> JsBoolean(sourceMapLessInline.value),
       "sourceMapRootpath" -> JsString(sourceMapRootpath.value),
       "strictImports" -> JsBoolean(strictImports.value),
+      "strictMath" -> JsBoolean(strictMath.value),
       "strictUnits" -> JsBoolean(strictUnits.value),
       "verbose" -> JsBoolean(verbose.value)
     ).toString()
   )
+
+  private def toJsObjectOrNull(fields: Seq[(String, String)]): JsValue = {
+    if (fields.isEmpty) JsNull
+    else JsObject(fields.toMap.mapValues(v => JsString(v)))
+  }
 
   override def projectSettings = Seq(
     cleancss := false,
@@ -94,6 +99,7 @@ object SbtLess extends AutoPlugin {
     ieCompat := true,
     insecure := false,
     maxLineLen := -1,
+    modifyVariables := Seq.empty,
     optimization := 1,
     relativeImports := true,
     relativeUrls := false,

@@ -29,6 +29,7 @@ globalVariables     | Variables that will be placed at the top of the less file.
 ieCompat            | Do IE compatibility checks.
 insecure            | Allow imports from insecure https hosts.
 maxLineLen          | Maximum line length.
+modifyVariables     | Modifies a variable already declared in the file.
 optimization        | Set the parser's optimization level.
 relativeImports     | Re-write import paths relative to the base less file. Default is true.
 relativeUrls        | Re-write relative urls to the base less file.
@@ -41,6 +42,7 @@ sourceMapRootpath   | Adds this path onto the sourcemap filename and less file p
 strictImports       | Whether imports should be strict.
 strictMath          | Requires brackets. This option may default to true and be removed in future.
 strictUnits         | Whether all unit should be strict, or if mixed units are allowed.
+urlArgs             | Adds params into url tokens (e.g. 42, cb=42 or 'a=1&b=2').
 verbose             | Be verbose.
     
 The following sbt code illustrates how compression can be enabled:

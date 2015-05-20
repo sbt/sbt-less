@@ -1,16 +1,18 @@
 sbtPlugin := true
 
 organization := "com.typesafe.sbt"
-
 name := "sbt-less"
+description := "sbt-web less plugin"
 
 scalaVersion := "2.10.4"
+sbtPlugin := true
 
 libraryDependencies ++= Seq(
-  "org.webjars" % "less-node" % "1.7.5",
-  "org.webjars" % "source-map" % "0.1.31-2",
-  "org.webjars" % "mkdirp" % "0.3.5",
-  "org.webjars" % "clean-css" % "2.2.7"
+  "org.webjars" % "less-node" % "2.5.0",
+  "org.webjars" % "source-map" % "0.1.40-1",
+  "org.webjars" % "mkdirp" % "0.5.0",
+  "org.webjars" % "clean-css" % "2.2.7",
+  "org.webjars" % "es6-promise-node" % "2.1.1"
 )
 
 resolvers ++= Seq(
@@ -20,7 +22,7 @@ resolvers ++= Seq(
   "Typesafe Snapshots Repository" at "http://repo.typesafe.com/typesafe/snapshots/"
 )
 
-addSbtPlugin("com.typesafe.sbt" %% "sbt-js-engine" % "1.0.1")
+addSbtPlugin("com.typesafe.sbt" %% "sbt-js-engine" % "1.1.0")
 
 publishMavenStyle := false
 
