@@ -1,9 +1,5 @@
-organization := "com.typesafe.sbt"
-name := "sbt-less"
+lazy val `sbt-less` = project in file(".")
 description := "sbt-web less plugin"
-
-scalaVersion := "2.10.4"
-sbtPlugin := true
 
 libraryDependencies ++= Seq(
   "org.webjars" % "less-node" % "2.5.0",
@@ -13,17 +9,4 @@ libraryDependencies ++= Seq(
   "org.webjars" % "es6-promise-node" % "2.1.1"
 )
 
-addSbtPlugin("com.typesafe.sbt" %% "sbt-js-engine" % "1.1.2")
-
-publishMavenStyle := false
-
-publishTo := {
-  if (isSnapshot.value) Some(Classpaths.sbtPluginSnapshots)
-  else Some(Classpaths.sbtPluginReleases)
-}
-
-scriptedSettings
-
-scriptedLaunchOpts <+= version apply { v => s"-Dproject.version=$v" }
-
-scriptedBufferLog := false
+addSbtJsEngine("1.1.2")
