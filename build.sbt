@@ -1,5 +1,3 @@
-sbtPlugin := true
-
 organization := "com.typesafe.sbt"
 name := "sbt-less"
 description := "sbt-web less plugin"
