@@ -99,11 +99,8 @@
                     throwIfErr(e);
 
                     var imports = [];
-                    var files = result.imports;
-                    for (var file in files) {
-                        if (files.hasOwnProperty(file)) {
-                            imports.push(file);
-                        }
+                    for (var i = 0; i < result.imports.length; i++) {
+                        imports.push(result.imports[i]);
                     }
 
                     results.push({
