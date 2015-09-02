@@ -67,7 +67,10 @@ object SbtLess extends AutoPlugin {
       "maxLineLen" -> JsNumber(maxLineLen.value),
       "optimization" -> JsNumber(optimization.value),
       "paths" -> JsArray(
-        (sourceDirectories.value ++ resourceDirectories.value ++ webModuleDirectories.value)
+        (sourceDirectories.value
+            ++ resourceDirectories.value
+            ++ webModuleDirectories.value
+            ++ nodeModuleDirectories.value)
           .map(f => JsString(f.getAbsolutePath)).toVector
       ),
       "relativeImports" -> JsBoolean(relativeImports.value),
