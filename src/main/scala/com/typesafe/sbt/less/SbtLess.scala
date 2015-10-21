@@ -129,8 +129,12 @@ object SbtLess extends AutoPlugin {
         taskMessage in TestAssets := "LESS test compiling"
       )
   ) ++ SbtJsTask.addJsSourceFileTasks(less) ++ Seq(
-    less in Assets := (less in Assets).dependsOn(webModules in Assets).value,
-    less in TestAssets := (less in TestAssets).dependsOn(webModules in TestAssets).value
+    less in Assets := (less in Assets).dependsOn(
+      webModules in Assets, nodeModules in Assets
+    ).value,
+    less in TestAssets := (less in TestAssets).dependsOn(
+      webModules in TestAssets, nodeModules in TestAssets
+    ).value
   )
 
 }
