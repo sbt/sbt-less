@@ -6,6 +6,9 @@ sbt-less
 Allows less to be used from within sbt. Builds on com.typesafe.sbt:js-engine in order to execute the less compiler along with
 the scripts to verify. js-engine enables high performance linting given parallelism and native JS engine execution.
 
+Setup
+-----
+
 To use this plugin use the addSbtPlugin command within your project's plugins.sbt (or as a global setting) i.e.:
 
 ```scala
@@ -16,7 +19,10 @@ Your project's build file also needs to enable sbt-web plugins. For example with
 
     lazy val root = (project in file(".")).enablePlugins(SbtWeb)
 
-The compiler allows most of the same options to be specified as the (lessc CLI itself)[http://lesscss.org/usage/].
+Options
+-------
+
+The compiler allows most of the same options to be specified as the [lessc CLI itself](http://lesscss.org/usage/).
 Here are the options:
 
 Option              | Description
@@ -72,6 +78,12 @@ include all `.less` files but exclude any beginning with an `_` you can use the 
 includeFilter in (Assets, LessKeys.less) := "*.less"
 
 excludeFilter in (Assets, LessKeys.less) := "_*.less"
+```
+
+To remove .less files from your production deployment, add the following:
+
+```scala
+pipelineStages := Seq(removeLessSources, ...)
 ```
 
 &copy; Typesafe Inc., 2013, 2014
