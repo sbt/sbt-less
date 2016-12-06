@@ -12,7 +12,7 @@ To use this plugin use the addSbtPlugin command within your project's plugins.sb
 addSbtPlugin("com.typesafe.sbt" % "sbt-less" % "1.1.0")
 ```
 
-Your project's build file also needs to enable sbt-web plugins. For example with build.sbt:
+Your project's build file also needs to enable sbt-web plugins. In a play application, this is done for you. Example build.sbt in a non-playframework project:
 
     lazy val root = (project in file(".")).enablePlugins(SbtWeb)
 
