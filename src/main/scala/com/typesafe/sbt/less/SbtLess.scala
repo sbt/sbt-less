@@ -93,6 +93,13 @@ object SbtLess extends AutoPlugin {
     else JsObject(fields.toMap.mapValues(v => JsString(v)))
   }
 
+  override def buildSettings = inTask(less)(
+    SbtJsTask.jsTaskSpecificUnscopedBuildSettings ++ Seq(
+      moduleName := "less",
+      shellFile := getClass.getClassLoader.getResource("lessc.js")
+    )
+  )
+
   override def projectSettings = Seq(
     cleancss := false,
     cleancssOptions := "",
@@ -118,13 +125,10 @@ object SbtLess extends AutoPlugin {
     verbose := false
 
   ) ++ inTask(less)(
-    SbtJsTask.jsTaskSpecificUnscopedSettings ++
+    SbtJsTask.jsTaskSpecificUnscopedProjectSettings ++
       inConfig(Assets)(lessUnscopedSettings) ++
       inConfig(TestAssets)(lessUnscopedSettings) ++
       Seq(
-        moduleName := "less",
-        shellFile := getClass.getClassLoader.getResource("lessc.js"),
-
         taskMessage in Assets := "LESS compiling",
         taskMessage in TestAssets := "LESS test compiling"
       )

@@ -1,4 +1,4 @@
-jdk: openjdk6
+jdk: oraclejdk7
 language: scala
 sudo: false
 script: sbt scripted
