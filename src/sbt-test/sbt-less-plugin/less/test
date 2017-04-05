@@ -14,3 +14,8 @@ $ exists target/web/public/main/css/main.min.css
 $ exists target/web/public/main/css/main.min.css.map
 > checkMapFileContents
 
+# Compile without sourceMaps
+> set LessKeys.sourceMap in Assets := false
+> assets
+$ exists target/web/public/main/css/main.min.css
+-$ exists target/web/public/main/css/main.min.css.map

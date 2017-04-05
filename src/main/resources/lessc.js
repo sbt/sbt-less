@@ -50,11 +50,11 @@
         var output = path.join(target, outputFile);
         var sourceMapOutput = output + ".map";
 
-        options.sourceMap = {
+        options.sourceMap = options.sourceMap == true ? {
             sourceMapBasepath: path.dirname(input),
             sourceMapFullFilename: path.basename(sourceMapOutput),
             sourceMapOutputFilename: path.basename(outputFile)
-        };
+        } : null;
         options.filename = input;
         options.plugins = [];
 
