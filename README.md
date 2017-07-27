@@ -16,7 +16,7 @@ Your project's build file also needs to enable sbt-web plugins. For example with
 
     lazy val root = (project in file(".")).enablePlugins(SbtWeb)
 
-The compiler allows most of the same options to be specified as the (lessc CLI itself)[http://lesscss.org/usage/].
+The compiler allows most of the same options to be specified as the [lessc CLI itself](http://lesscss.org/usage/).
 Here are the options:
 
 Option              | Description
