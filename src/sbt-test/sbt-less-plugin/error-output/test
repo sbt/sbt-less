@@ -3,15 +3,15 @@
 # Compile an less file and see that errors are reported.
 -> assets
 
-> error-exists    main.less 1 45
-> error-msg       main.less Unrecognised input. Possibly missing something
-> error-contents  main.less This is no place for anything less than less
+> errorExists    main.less 1 45
+> errorMsg       main.less Unrecognised input. Possibly missing something
+> errorContents  main.less This is no place for anything less than less
 
-> error-exists    missing-variable.less 2 16
-> error-msg       missing-variable.less variable @heading-font-family is undefined
-> error-contents  missing-variable.less font-family: @heading-font-family;
+> errorExists    missing-variable.less 2 16
+> errorMsg       missing-variable.less variable @heading-font-family is undefined
+> errorContents  missing-variable.less font-family: @heading-font-family;
 
-> reset-errors
+> resetErrors
 
 # Switch to node (if it exists)
 > set JsEngineKeys.engineType := ErrorBuild.maybeNode
@@ -19,10 +19,10 @@
 # Run all the same tests as before
 -> assets
 
-> error-exists    main.less 1 45
-> error-msg       main.less Unrecognised input. Possibly missing something
-> error-contents  main.less This is no place for anything less than less
+> errorExists    main.less 1 45
+> errorMsg       main.less Unrecognised input. Possibly missing something
+> errorContents  main.less This is no place for anything less than less
 
-> error-exists    missing-variable.less 2 16
-> error-msg       missing-variable.less variable @heading-font-family is undefined
-> error-contents  missing-variable.less font-family: @heading-font-family;
+> errorExists    missing-variable.less 2 16
+> errorMsg       missing-variable.less variable @heading-font-family is undefined
+> errorContents  missing-variable.less font-family: @heading-font-family;
