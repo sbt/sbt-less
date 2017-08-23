@@ -56,7 +56,14 @@
             sourceMapOutputFilename: path.basename(outputFile)
         } : null;
         options.filename = input;
-        options.plugins = [];
+
+        if (options.cleancss) {
+            var LessPluginCleanCSS = require('less-plugin-clean-css');
+            var cleanCSSPlugin = new LessPluginCleanCSS();
+            options.plugins = [cleanCSSPlugin];
+        } else {
+            options.plugins = [];
+        }
 
         var writeSourceMap = function (content, onDone) {
             if (content) { // NOTE: this is workaround for https://github.com/less/less.js/issues/2430
