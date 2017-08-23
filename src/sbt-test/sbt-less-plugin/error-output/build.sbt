@@ -10,77 +10,59 @@ val errors = SettingKey[TrieMap[String, (Int, Int, String, String)]]("errors")
 
 errors := TrieMap.empty
 
-WebKeys.reporter := new LoggerReporter(-1, new Logger {
-  var currentError: Option[(String, Int, String)] = None
-  var currentContents: Option[String] = None
-  val Error = """.*/([^/]+\.less):(\d+): (.*)""".r
-  def trace(t: => Throwable): Unit = {}
-  def success(message: => String): Unit = {}
-  def log(level: Level.Value, message: => String): Unit = {
-    if (level == Level.Error) {
-      (currentError, currentContents, message) match {
-        case (None, None, Error(file, line, msg)) =>
-          currentError = Some((file, line.toInt, msg))
-        case (Some(_), None, msg) =>
-          currentContents = Some(msg)
-        case (Some((file, line, err)), Some(contents), msg) =>
-          errors.value += (file -> (line, msg.indexOf('^') + 1, err, contents))
-          currentError = None
-          currentContents = None
-        case _ =>
-      }
-    }
-  }
-})
+WebKeys.reporter := new Compat.CapturingLoggerReporter(streams.value.log, errors.value)
 
 includeFilter in (Assets, less) := GlobFilter("*.less")
 
-InputKey[Unit]("error-exists") := {
+InputKey[Unit]("errorExists") := {
   val args = Def.spaceDelimited("<file> <line> <column>").parsed
   val file = args(0)
   val line = args(1).toInt
   val col = args(2).toInt
-  errors.value.get(file) match {
+  val theErrors = errors.value
+  theErrors.get(file) match {
     case Some((l, c, msg, contents)) =>
       if (line != l) {
-        throw new RuntimeException(s"Error in $file expected on line $line but was found on $l: $msg\n$contents\nAll errors: ${errors.value}")
+        throw new RuntimeException(s"Error in $file expected on line $line but was found on $l: $msg\n$contents\nAll errors: $theErrors")
       }
       if (col != c) {
-        throw new RuntimeException(s"Error in $file:$line expected on column $col but was found on $c: $msg\n$contents\nAll errors: ${errors.value}")
+        throw new RuntimeException(s"Error in $file:$line expected on column $col but was found on $c: $msg\n$contents\nAll errors: $theErrors")
       }
     case None =>
-      throw new RuntimeException(s"Error expected in $file but no error found.\nAll errors: ${errors.value}")
+      throw new RuntimeException(s"Error expected in $file but no error found.\nAll errors: $theErrors")
   }
 }
 
-InputKey[Unit]("error-msg") := {
+InputKey[Unit]("errorMsg") := {
   val args = Def.spaceDelimited("<file> <msg>").parsed
   val file = args(0)
   val msg = args.tail.mkString(" ")
-  errors.value.get(file) match {
+  val theErrors = errors.value
+  theErrors.get(file) match {
     case Some((_, _, err, _)) =>
       if (err != msg) {
         throw new RuntimeException(s"Error in $file expected '$msg' but was '$err'")
       }
     case None =>
-      throw new RuntimeException(s"Error message expected in $file but no error found (${errors.value})")
+      throw new RuntimeException(s"Error message expected in $file but no error found ($theErrors)")
   }
 }
 
-InputKey[Unit]("error-contents") := {
+InputKey[Unit]("errorContents") := {
   val args = Def.spaceDelimited("<file> <contents>").parsed
   val file = args(0)
   val contents = args.tail.mkString(" ")
-  errors.value.get(file) match {
+  val theErrors = errors.value
+  theErrors.get(file) match {
     case Some((_, _, _, c)) =>
       if (contents != c.trim) {
         throw new RuntimeException(s"Error in $file expected contents '$contents' but was '$c'")
       }
     case None =>
-      throw new RuntimeException(s"Error contents expected in $file but no error found (${errors.value})")
+      throw new RuntimeException(s"Error contents expected in $file but no error found ($theErrors)")
   }
 }
 
-InputKey[Unit]("reset-errors") := {
+InputKey[Unit]("resetErrors") := {
   errors.value.clear()
 }
