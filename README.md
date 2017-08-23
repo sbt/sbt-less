@@ -1,7 +1,7 @@
 sbt-less
 ========
 
-[![Build Status](https://api.travis-ci.org/sbt/sbt-less.png?branch=master)](https://travis-ci.org/sbt/sbt-less)
+[![Build Status](https://api.travis-ci.org/sbt/sbt-less.png?branch=master)](https://travis-ci.org/sbt/sbt-less) [![Download](https://api.bintray.com/packages/sbt-web/sbt-plugin-releases/sbt-less/images/download.svg)](https://bintray.com/sbt-web/sbt-plugin-releases/sbt-less/_latestVersion)
 
 Allows less to be used from within sbt. Builds on com.typesafe.sbt:js-engine in order to execute the less compiler along with
 the scripts to verify. js-engine enables high performance linting given parallelism and native JS engine execution.
@@ -9,7 +9,7 @@ the scripts to verify. js-engine enables high performance linting given parallel
 To use this plugin use the addSbtPlugin command within your project's plugins.sbt (or as a global setting) i.e.:
 
 ```scala
-addSbtPlugin("com.typesafe.sbt" % "sbt-less" % "1.1.1")
+addSbtPlugin("com.typesafe.sbt" % "sbt-less" % "1.1.2")
 ```
 
 Your project's build file also needs to enable sbt-web plugins. For example with build.sbt:
