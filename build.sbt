@@ -21,7 +21,7 @@ libraryDependencies ++= Seq(
   "org.webjars" % "mkdirp" % "0.5.0",
   "org.webjars.npm" % "clean-css" % "4.0.5",
   "org.webjars.npm" % "less-plugin-clean-css" % "1.5.1" intransitive(),
-  "org.webjars" % "es6-promise-node" % "2.1.1"
+  "org.webjars" % "es6-promise-node" % "4.2.8"
 )
 
 // Customise sbt-dynver's behaviour to make it work with tags which aren't v-prefixed
