@@ -10,4 +10,4 @@ libraryDependencies ++= Seq(
 )
 
 addSbtJsEngine("1.2.2")
-addSbtWeb("1.4.3")
+addSbtWeb("1.4.4")
