@@ -14,7 +14,7 @@ errors := TrieMap.empty
 
 WebKeys.reporter := new Compat.CapturingLoggerReporter(streams.value.log, errors.value)
 
-includeFilter in (Assets, less) := GlobFilter("*.less")
+(Assets / less / includeFilter) := GlobFilter("*.less")
 
 InputKey[Unit]("errorExists") := {
   val args = Def.spaceDelimited("<file> <line> <column>").parsed

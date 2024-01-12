@@ -6,7 +6,7 @@ $ exists target/web/public/main/css/main.css.map
 
 # Compile with compression
 
-> set LessKeys.compress in Assets := true
+> set Assets / LessKeys.compress := true
 > assets
 -$ exists target/web/public/main/css/main.css
 -$ exists target/web/public/main/css/main.css.map
@@ -15,7 +15,7 @@ $ exists target/web/public/main/css/main.min.css.map
 > checkMapFileContents
 
 # Compile without sourceMaps
-> set LessKeys.sourceMap in Assets := false
+> set Assets / LessKeys.sourceMap := false
 > assets
 $ exists target/web/public/main/css/main.min.css
 -$ exists target/web/public/main/css/main.min.css.map
