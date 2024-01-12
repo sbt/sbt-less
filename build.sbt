@@ -9,5 +9,5 @@ libraryDependencies ++= Seq(
   "org.webjars" % "es6-promise-node" % "2.1.1"
 )
 
-addSbtJsEngine("1.3.3")
-addSbtWeb("1.5.2")
+addSbtJsEngine("1.3.5")
+addSbtWeb("1.5.3")
