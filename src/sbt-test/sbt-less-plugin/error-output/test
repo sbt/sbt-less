@@ -9,7 +9,7 @@
 
 > errorExists    missing-variable.less 2 16
 > errorMsg       missing-variable.less variable @heading-font-family is undefined
-> errorContents  missing-variable.less font-family: @heading-font-family;
+> errorContents  missing-variable.less "font-family: @heading-font-family;"
 
 > resetErrors
 
@@ -25,4 +25,4 @@
 
 > errorExists    missing-variable.less 2 16
 > errorMsg       missing-variable.less variable @heading-font-family is undefined
-> errorContents  missing-variable.less font-family: @heading-font-family;
+> errorContents  missing-variable.less "font-family: @heading-font-family;"
