@@ -1,15 +1,15 @@
 sbt-less
 ========
 
-[![Build Status](https://api.travis-ci.org/sbt/sbt-less.png?branch=master)](https://travis-ci.org/sbt/sbt-less) [![Download](https://api.bintray.com/packages/sbt-web/sbt-plugin-releases/sbt-less/images/download.svg)](https://bintray.com/sbt-web/sbt-plugin-releases/sbt-less/_latestVersion)
+[![Build Status](https://github.com/sbt/sbt-less/actions/workflows/build-test.yml/badge.svg)](https://github.com/sbt/sbt-less/actions/workflows/build-test.yml)
 
-Allows less to be used from within sbt. Builds on com.typesafe.sbt:js-engine in order to execute the less compiler along with
+Allows less to be used from within sbt. Builds on com.github.sbt:js-engine in order to execute the less compiler along with
 the scripts to verify. js-engine enables high performance linting given parallelism and native JS engine execution.
 
 To use this plugin use the addSbtPlugin command within your project's plugins.sbt (or as a global setting) i.e.:
 
 ```scala
-addSbtPlugin("com.typesafe.sbt" % "sbt-less" % "1.1.2")
+addSbtPlugin("com.github.sbt" % "sbt-less" % "2.0.0")
 ```
 
 Your project's build file also needs to enable sbt-web plugins. For example with build.sbt:
@@ -48,7 +48,7 @@ verbose             | Be verbose.
 The following sbt code illustrates how compression can be enabled:
 
 ```scala
-LessKeys.compress in Assets := true
+Assets / LessKeys.compress := true
 ```
 
 By default only `main.less` is looked for given that the LESS compiler must be explicitly fed the files
@@ -56,7 +56,7 @@ that are required for compilation. Beyond just `main.less`, you can use an expre
 following:
 
 ```scala
-includeFilter in (Assets, LessKeys.less) := "foo.less" | "bar.less"
+Assets / LessKeys.less / includeFilter := "foo.less" | "bar.less"
 ```
 
 ...where both `foo.less` and `bar.less` will be considered for the LESS compiler.
@@ -69,9 +69,7 @@ you may have a convention where any LESS file starting with an `_` should not be
 include all `.less` files but exclude any beginning with an `_` you can use the following declaration:
 
 ```scala
-includeFilter in (Assets, LessKeys.less) := "*.less"
+Assets / LessKeys.less / includeFilter := "*.less"
 
-excludeFilter in (Assets, LessKeys.less) := "_*.less"
+Assets / LessKeys.less / excludeFilter := "_*.less"
 ```
-
-&copy; Typesafe Inc., 2013, 2014
