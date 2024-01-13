@@ -1,5 +1,3 @@
-lazy val root = Project("plugins", file(".")).dependsOn(plugin)
+lazy val plugin = RootProject(file("..").getAbsoluteFile.toURI)
 
-lazy val plugin = file("../").getCanonicalFile.toURI
-
-resolvers += Resolver.mavenLocal
+lazy val root = (project in file(".")).dependsOn(plugin)

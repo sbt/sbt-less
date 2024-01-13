@@ -4,6 +4,6 @@ lazy val root = (project in file(".")).enablePlugins(SbtWeb)
 
 libraryDependencies += "org.webjars" % "bootstrap" % "3.0.2"
 
-LessKeys.compress in Assets := false
+Assets / LessKeys.compress := false
 
-includeFilter in (Assets, LessKeys.less) := "foo.less" | "bar.less"
+Assets / LessKeys.less / includeFilter := "foo.less" | "bar.less"

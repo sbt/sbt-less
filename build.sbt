@@ -1,4 +1,4 @@
-lazy val `sbt-less` = project in file(".")
+lazy val `sbt-less` = (project in file(".")).enablePlugins(SbtWebBase)
 description := "sbt-web less plugin"
 
 libraryDependencies ++= Seq(
@@ -9,5 +9,5 @@ libraryDependencies ++= Seq(
   "org.webjars" % "es6-promise-node" % "2.1.1"
 )
 
-addSbtJsEngine("1.2.2")
-addSbtWeb("1.4.3")
+addSbtJsEngine("1.3.5")
+addSbtWeb("1.5.3")

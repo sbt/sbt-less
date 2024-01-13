@@ -129,15 +129,15 @@ object SbtLess extends AutoPlugin {
       inConfig(Assets)(lessUnscopedSettings) ++
       inConfig(TestAssets)(lessUnscopedSettings) ++
       Seq(
-        taskMessage in Assets := "LESS compiling",
-        taskMessage in TestAssets := "LESS test compiling"
+        (Assets / taskMessage) := "LESS compiling",
+        (TestAssets / taskMessage) := "LESS test compiling"
       )
   ) ++ SbtJsTask.addJsSourceFileTasks(less) ++ Seq(
-    less in Assets := (less in Assets).dependsOn(
-      webModules in Assets, nodeModules in Assets
+    Assets / less := (Assets / less).dependsOn(
+      Assets / webModules, Assets / nodeModules
     ).value,
-    less in TestAssets := (less in TestAssets).dependsOn(
-      webModules in TestAssets, nodeModules in TestAssets
+    TestAssets / less := (TestAssets / less).dependsOn(
+      TestAssets / webModules, TestAssets / nodeModules
     ).value
   )
 

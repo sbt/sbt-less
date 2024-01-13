@@ -5,7 +5,7 @@ LessKeys.globalVariables := Seq("color" -> "blue")
 val checkFileContents = taskKey[Unit]("Check for the presence of a variable")
 
 checkFileContents := {
-  val contents = IO.read((WebKeys.public in Assets).value / "css" / "main.css")
+  val contents = IO.read((Assets / WebKeys.public).value / "css" / "main.css")
   val expected = "color: blue"
 
   if (!contents.contains(expected)) {

@@ -82,12 +82,14 @@
                     }
                     content = JSON.stringify(content);
                 }
-            }
 
-            mkdirp(path.dirname(sourceMapOutput), function (e) {
-                throwIfErr(e);
-                fs.writeFile(sourceMapOutput, content, "utf8", onDone);
-            });
+                mkdirp(path.dirname(sourceMapOutput), function (e) {
+                    throwIfErr(e);
+                    fs.writeFile(sourceMapOutput, content, "utf8", onDone);
+                });
+            } else {
+              onDone()
+            }
         };
 
 

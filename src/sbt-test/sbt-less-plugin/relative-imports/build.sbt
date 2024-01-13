@@ -5,7 +5,7 @@ libraryDependencies += "org.webjars" % "bootstrap" % "3.0.2"
 val checkMapFileContents = taskKey[Unit]("check that map contents are correct")
 
 checkMapFileContents := {
-  val contents = IO.read((WebKeys.public in Assets).value / "main.css.map")
+  val contents = IO.read((Assets / WebKeys.public).value / "main.css.map")
   val expectedContents = """{"version":3,"sources":["main.less","../lib/bootstrap/less/mixins.less"],"names":[],"mappings":"AAEA;ECsCE,cAAA;EACA,iBAAA;EACA,kBAAA","file":"main.css"}"""
 
   if (contents != expectedContents) {
