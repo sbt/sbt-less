@@ -19,7 +19,7 @@ addSbtWeb("1.5.3")
 libraryDependencies ++= Seq(
   "org.webjars.npm" % "less" % "4.2.0",
   "org.webjars.npm" % "clone" % "2.1.2",
-  "org.webjars.npm" % "mkdirp" % "0.5.6",
+  "org.webjars.npm" % "mkdirp" % "3.0.1",
   "org.webjars.npm" % "clean-css" % "4.2.4",
   "org.webjars.npm" % "less-plugin-clean-css" % "1.5.1" intransitive(),
   "org.webjars.npm" % "es6-promise" % "4.2.8"
