@@ -17,7 +17,7 @@ addSbtJsEngine("1.3.5")
 addSbtWeb("1.5.3")
 
 libraryDependencies ++= Seq(
-  "org.webjars.npm" % "less" % "3.8.1",
+  "org.webjars.npm" % "less" % "3.13.1",
   "org.webjars.npm" % "clone" % "2.1.2",
   "org.webjars.npm" % "mkdirp" % "0.5.6",
   "org.webjars.npm" % "clean-css" % "4.2.4",
