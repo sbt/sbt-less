@@ -4,18 +4,20 @@
 
     "use strict";
 
+    var requireIfExists = require('node-require-fallback')
+
     // Ensure we have a promise implementation.
     //
     if (typeof Promise === 'undefined') {
-        var Promise = require("es6-promise").Promise;
+        var Promise = requireIfExists("es6-promise/4.2.8", "es6-promise").Promise; // sync with build.sbt
         global.Promise = Promise;
     }
 
     var args = process.argv,
         os = require("os"),
         fs = require("fs"),
-        less = require("less"),
-        mkdirp = require("mkdirp"),
+        less = requireIfExists("less/4.2.0", "less"), // sync with build.sbt
+        mkdirp = requireIfExists("mkdirp/0.5.6", "mkdirp"), // sync with build.sbt
         path = require("path");
 
     var SOURCE_FILE_MAPPINGS_ARG = 2;
@@ -58,7 +60,7 @@
         options.filename = input;
 
         if (options.cleancss) {
-            var LessPluginCleanCSS = require('less-plugin-clean-css');
+            var LessPluginCleanCSS = requireIfExists("less-plugin-clean-css/1.5.1", "less-plugin-clean-css"); // sync with build.sbt
             var cleanCSSPlugin = new LessPluginCleanCSS();
             options.plugins = [cleanCSSPlugin];
         } else {

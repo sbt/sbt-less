@@ -1,0 +1,21 @@
+# Compile a less file
+
+> assets
+$ exists target/web/public/main/css/main.css
+$ exists target/web/public/main/css/main.css.map
+
+# Compile with compression
+
+> set Assets / LessKeys.compress := true
+> assets
+-$ exists target/web/public/main/css/main.css
+-$ exists target/web/public/main/css/main.css.map
+$ exists target/web/public/main/css/main.min.css
+$ exists target/web/public/main/css/main.min.css.map
+> checkMapFileContents
+
+# Compile without sourceMaps
+> set Assets / LessKeys.sourceMap := false
+> assets
+$ exists target/web/public/main/css/main.min.css
+-$ exists target/web/public/main/css/main.min.css.map
