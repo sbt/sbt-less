@@ -19,3 +19,14 @@ $ exists target/web/public/main/css/main.min.css.map
 > assets
 $ exists target/web/public/main/css/main.min.css
 -$ exists target/web/public/main/css/main.min.css.map
+
+$ exists project/target/node-modules/webjars/less/3.8.1
+$ exists project/target/node-modules/webjars/less/4.2.0
+
+$ exists project/target/node-modules/webjars/mkdirp/0.3.5
+$ exists project/target/node-modules/webjars/mkdirp/0.5.6
+
+$ exists project/target/node-modules/webjars/less-plugin-clean-css/package.json
+
+$ exists project/target/node-modules/webjars/es6-promise/2.1.1
+$ exists project/target/node-modules/webjars/es6-promise/4.2.8
