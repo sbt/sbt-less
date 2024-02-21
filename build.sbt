@@ -14,7 +14,7 @@ developers += Developer(
 )
 
 addSbtJsEngine("1.3.5")
-addSbtWeb("1.5.3")
+addSbtWeb("1.5.4")
 
 libraryDependencies ++= Seq(
   "org.webjars.npm" % "node-require-fallback" % "1.0.0",
