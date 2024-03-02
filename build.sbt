@@ -13,7 +13,7 @@ developers += Developer(
   url("https://github.com/playframework")
 )
 
-addSbtJsEngine("1.3.5")
+addSbtJsEngine("1.3.6")
 addSbtWeb("1.5.4")
 
 libraryDependencies ++= Seq(
