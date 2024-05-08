@@ -96,7 +96,14 @@ object SbtLess extends AutoPlugin {
   override def buildSettings = inTask(less)(
     SbtJsTask.jsTaskSpecificUnscopedBuildSettings ++ Seq(
       moduleName := "less",
-      shellFile := getClass.getClassLoader.getResource("lessc.js")
+      shellFile := {
+        println("")
+        println("")
+        println("Using shell-file: " + getClass.getClassLoader.getResource("lessc.js"))
+        println("")
+        println("")
+        getClass.getClassLoader.getResource("lessc.js")
+      }
     )
   )
 

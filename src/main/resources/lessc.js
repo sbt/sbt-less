@@ -20,6 +20,18 @@
         mkdirp = requireIfExists("mkdirp/0.5.6", "mkdirp"), // sync with build.sbt
         path = require("path");
 
+    try {
+      console.debug("Using: " + require.resolve("less/4.2.0"))
+    } catch (e) {
+      console.debug("can not resolve less/4.2.0");
+    }
+    try {
+      console.debug("Using: " + require.resolve("less"))
+    } catch (e) {
+      console.debug("can not resolve less");
+    }
+    console.debug("less: " + JSON.stringify(less));
+
     var SOURCE_FILE_MAPPINGS_ARG = 2;
     var TARGET_ARG = 3;
     var OPTIONS_ARG = 4;
