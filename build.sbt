@@ -13,8 +13,8 @@ developers += Developer(
   url("https://github.com/playframework")
 )
 
-addSbtJsEngine("1.3.7")
-addSbtWeb("1.5.6")
+addSbtJsEngine("1.3.9")
+addSbtWeb("1.5.8")
 
 libraryDependencies ++= Seq(
   "org.webjars.npm" % "node-require-fallback" % "1.0.0",
