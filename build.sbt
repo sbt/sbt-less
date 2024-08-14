@@ -21,7 +21,7 @@ libraryDependencies ++= Seq(
   "org.webjars.npm" % "less" % "4.2.0", // sync with src/main/resources/lessc.js
   "org.webjars.npm" % "clone" % "2.1.2",
   "org.webjars.npm" % "mkdirp" % "0.5.6", // sync with src/main/resources/lessc.js
-  "org.webjars.npm" % "clean-css" % "5.3.2",
+  "org.webjars.npm" % "clean-css" % "5.3.3",
   "org.webjars.npm" % "less-plugin-clean-css" % "1.5.1" intransitive(), // sync with src/main/resources/lessc.js
   "org.webjars.npm" % "es6-promise" % "4.2.8", // sync with src/main/resources/lessc.js
 )
