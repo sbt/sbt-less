@@ -18,7 +18,7 @@ addSbtWeb("1.5.8")
 
 libraryDependencies ++= Seq(
   "org.webjars.npm" % "node-require-fallback" % "1.0.0",
-  "org.webjars.npm" % "less" % "4.2.0", // sync with src/main/resources/lessc.js
+  "org.webjars.npm" % "less" % "4.3.0", // sync with src/main/resources/lessc.js
   "org.webjars.npm" % "clone" % "2.1.2",
   "org.webjars.npm" % "mkdirp" % "0.5.6", // sync with src/main/resources/lessc.js
   "org.webjars.npm" % "clean-css" % "5.3.3",
