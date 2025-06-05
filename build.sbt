@@ -2,8 +2,6 @@ lazy val `sbt-less` = project in file(".")
 
 enablePlugins(SbtWebBase)
 
-sonatypeProfileName := "com.github.sbt.sbt-less" // See https://issues.sonatype.org/browse/OSSRH-77819#comment-1203625
-
 description := "sbt-web less plugin"
 
 developers += Developer(
