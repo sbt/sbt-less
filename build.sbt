@@ -23,7 +23,7 @@ pluginCrossBuild / sbtVersion := {
   }
 }
 
-crossScalaVersions += "3.8.4"
+crossScalaVersions += "3.9.0"
 
 scalacOptions -= "-Xfatal-warnings"
 scalacOptions += "-Werror"
