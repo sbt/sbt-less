@@ -16,7 +16,7 @@
     var args = process.argv,
         os = require("os"),
         fs = require("fs"),
-        less = requireIfExists("less/4.8.1", "less"), // sync with build.sbt
+        less = requireIfExists("less/4.9.1", "less"), // sync with build.sbt
         mkdirp = requireIfExists("mkdirp/0.5.6", "mkdirp"), // sync with build.sbt
         path = require("path");
 
