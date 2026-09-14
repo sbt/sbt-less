@@ -17,7 +17,7 @@ addSbtWeb("1.6.0-M4")
 pluginCrossBuild / sbtVersion := {
   scalaBinaryVersion.value match {
     case "3" =>
-      "2.0.0-RC11"
+      "2.1.0-M1"
     case _ =>
       sbtVersion.value
   }
