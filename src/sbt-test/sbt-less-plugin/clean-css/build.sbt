@@ -6,7 +6,7 @@ val checkCleanCssUsed = taskKey[Unit]("check that clean-css has been used")
 
 checkCleanCssUsed := {
   val contents = IO.read((Assets / WebKeys.public).value / "css" / "main.css")
-  val expectedContents = """h1{color:#00f}"""
+  val expectedContents = """h1{color:#00f}/*# sourceMappingURL=main.css.map */"""
 
   if (contents != expectedContents) {
     sys.error(s"Unexpected contents: $contents, \nexpected: $expectedContents")
