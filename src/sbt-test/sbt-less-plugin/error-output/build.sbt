@@ -74,3 +74,7 @@ InputKey[Unit]("errorContents") := {
 InputKey[Unit]("resetErrors") := {
   errors.value.clear()
 }
+
+ThisBuild / scalaVersion := {
+  if (sbtVersion.value.startsWith("1.")) "2.12.21" else "3.9.0"
+}
