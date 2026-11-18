@@ -17,3 +17,7 @@ InputKey[Unit]("contains") := {
       sys.error(s"No files matched pattern: $pattern")
   }
 }
+
+ThisBuild / scalaVersion := {
+  if (sbtVersion.value.startsWith("1.")) "2.12.21" else "3.9.0"
+}

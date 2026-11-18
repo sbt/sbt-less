@@ -1,3 +1,5 @@
+ThisBuild / scalaVersion := "2.12.21"
+
 lazy val `sbt-less` = project in file(".")
 
 enablePlugins(SbtWebBase)
@@ -17,13 +19,13 @@ addSbtWeb("1.6.0-M4")
 pluginCrossBuild / sbtVersion := {
   scalaBinaryVersion.value match {
     case "3" =>
-      "2.1.0-M1"
+      "2.1.0"
     case _ =>
-      sbtVersion.value
+      "1.13.1"
   }
 }
 
-crossScalaVersions += "3.9.0"
+crossScalaVersions := Seq("2.12.21", "3.9.0")
 
 scalacOptions -= "-Xfatal-warnings"
 scalacOptions += "-Werror"
